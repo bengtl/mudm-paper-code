@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Environments / build
+.venv/
+venv/
+dist/
+build/
+
+# Downloaded / regenerated inputs (not committed — see data/README.md)
+data/*
+!data/README.md
+
+# Rendered figures (regenerate with figures/*.py)
+figures/*.pdf
+figures/*.png
+
+# macOS
+.DS_Store

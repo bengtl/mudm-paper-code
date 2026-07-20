@@ -1,0 +1,74 @@
+{
+  "timestamp": "2026-06-02T17:42:00+00:00",
+  "benchmark_id": "B2_xenium_ingest_validation",
+  "status": "passed",
+  "mudm_tools_version": "0.6.3",
+  "mudm_version": "0.6.1",
+  "dataset": "Xenium_FFPE_Human_Breast_Cancer_Rep1",
+  "dataset_source": "https://www.10xgenomics.com/datasets (Janesick et al., Nat. Commun. 2023; GEO GSE243275)",
+  "ingest_scope": "full whole-slide ingest (cells + nuclei polygons, transcript points, DAPI morphology raster pyramid) emitting MVT + Parquet",
+  "rep1_total_cells": 169088,
+  "rep1_total_nuclei": 169083,
+  "rep1_total_transcripts": 42638083,
+  "parquet_rows": {
+    "cells": 2246466,
+    "nuclei": 1971063,
+    "transcripts": 84998990
+  },
+  "gene_panel_dimension": 541,
+  "gene_panel_breakdown": {
+    "gene_expression_targets_predesigned": 280,
+    "gene_expression_targets_custom": 33,
+    "control_codewords_and_blanks": 228,
+    "note": "541 codewords = 313 expression features (280 predesigned + 33 custom) + 228 negative-control / blank codewords; the expression vector preserves all 541 entries to maintain index alignment with cell_feature_matrix."
+  },
+  "pixel_size_um": 0.2125,
+  "vector_zoom_range": [0, 9],
+  "raster_zoom_range": [0, 8],
+  "tile_grid_px": [65536, 65536],
+  "crs": {
+    "type": "physical",
+    "units": "micrometers"
+  },
+  "parquet_schema_columns": [
+    "zoom",
+    "tile_x",
+    "tile_y",
+    "feature_id",
+    "geom_type",
+    "positions",
+    "indices",
+    "ring_lengths",
+    "tags"
+  ],
+  "tags_column_keys": [
+    "cell_id",
+    "expression",
+    "cluster_id",
+    "x_centroid",
+    "y_centroid",
+    "transcript_counts",
+    "total_counts",
+    "cell_area",
+    "nucleus_area"
+  ],
+  "expression_storage_format": "JSON-encoded list under tags[\"expression\"]; consumers parse with json.loads (tags column schema is map<utf8, utf8>)",
+  "ontology_attachment": {
+    "status": "absent",
+    "vocabulary": null,
+    "note": "The Xenium Rep1 dataset has no native cell-type ontology. The pipeline ingests 10x graph-clustering assignments (analysis/clustering/gene_expression_graphclust/clusters.csv) and surfaces them as cluster_id; mapping clusters to Cell Ontology URIs requires manual marker-gene curation, out of scope for this validation."
+  },
+  "converter": "mudm-tools v0.6.3 full-slide Xenium converter (the ingest that produced the companion data catalogue dataset xenium-breast-full)",
+  "provenance": "Counts are taken from the v0.6.3 full-slide ingest that produced the companion data catalogue (mudm-data: tiles2d/xenium-breast-full); see logs/xenium-breast-full_convert.log on the analysis host (oden). These are the numbers used in the Methods and the Supplementary catalogue.",
+  "supersedes": {
+    "prior_version": "0.5.0",
+    "prior_timestamp": "2026-04-29T22:50:36.842658+00:00",
+    "prior_rep1_total_cells": 167780,
+    "note": "An earlier v0.5.0 ingest spike (2026-04-29) reported rep1_total_cells = 167780 from a 200-cell smoke test plus a cells.parquet row count. The v0.6.3 full-slide ingest counts 169088 cell features; the manuscript uses the v0.6.3 numbers. This file replaces that spike to keep the paper's cell count traceable to a deposited artifact."
+  },
+  "hardware": {
+    "description": "oden: 80-core Linux host + 2x NVIDIA RTX A4500",
+    "cpu_cores": 80
+  },
+  "notes": "Validated end-to-end full-slide ingest of Xenium FFPE Human Breast Cancer Rep1: 169,088 cell polygons, 169,083 nucleus polygons, 42,638,083 transcript points, and a DAPI morphology raster pyramid (0.2125 um/px), emitting standard MVT for 2D viewers and Parquet for ML. 541-codeword panel; CRS physical/micrometers."
+}

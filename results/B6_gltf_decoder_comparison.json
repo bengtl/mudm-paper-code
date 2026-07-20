@@ -1,0 +1,27 @@
+{
+  "timestamp": "2026-05-21T01:32:55.120318+00:00",
+  "benchmark_id": "B6_gltf_decoder_comparison",
+  "n_tiles_sampled": 50,
+  "iters": 20,
+  "hardware": {
+    "cpu_cores": 12
+  },
+  "rust_gltf": {
+    "mean_total_s": 0.00034059579993481746,
+    "stdev_total_s": 0.00048333755813095635,
+    "min_total_s": 0.00022825000633019954,
+    "mean_per_tile_s": 6.811915998696349e-06,
+    "min_per_tile_s": 4.5650001266039906e-06,
+    "n_tiles": 50,
+    "iters": 20
+  },
+  "pygltflib": {
+    "mean_total_s": 0.06640055424941238,
+    "stdev_total_s": 0.0009963132005817406,
+    "min_total_s": 0.06511995798791759,
+    "mean_per_tile_s": 0.0013280110849882476,
+    "min_per_tile_s": 0.0013023991597583518,
+    "n_tiles": 50,
+    "iters": 20
+  }
+}
