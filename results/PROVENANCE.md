@@ -53,7 +53,7 @@ rerun.
   figure (≈195× gap; a benchmark probe isolating scene-graph traversal, not the
   Parquet ML read path).
 - `hemibrain_fidelity.json` — single-seed (seed 42), single-branch PointNet
-  round-trip check, **source for Extended Data Table 1** (lossless-geometry
+  round-trip check, **source for Extended Data Table 2** (lossless-geometry
   evidence). Parquet tiles vs raw OBJ on 4,074 hemibrain neurons spanning the 20
   most common cell types (Kenyon / lobula-columnar / ORN), 1,024 sampled points:
   accuracy 94.4 % vs 95.1 %, macro-F1 93.5 % vs 94.2 %, mean epoch 22.9 s vs
@@ -62,6 +62,44 @@ rerun.
   Regenerated on oden 2026-06-04 from a fresh top-20-type neuPrint download
   (`data/hemibrain_fidelity/`, 4,545 meshes → top-20 cohort). `benchmark_id` is
   set to the filename stem `hemibrain_fidelity`.
+- `flywire_economy_{super_class,cell_class,hemilineage}.json` — **source for
+  Extended Data Table 3** (FlyWire second-connectome economy). Class-stratified
+  16,379-neuron subsample of the FlyWire adult-brain release (CC BY-NC 4.0,
+  regenerated locally per `data/README.md`, not redistributed), identical DGCNN
+  protocol (512-vertex budget, 15 seeds, levels z0–z4), split grouped by whole
+  `cell_type`. Run on the same box, 2026-07-20. Regenerate with
+  `run_manc --parquet <flywire_pyramid> --out-dir <dir> --labels super_class,cell_class,hemilineage --group-field cell_type --prefix flywire_economy`.
+- `manc_fusion_{neuron_class,subclass,hemilineage,cell_type}.json` and
+  `manc_countsonly_{...}.json` — **source for Extended Data Table 5** and the
+  Results fusion subsection. Three pre-specified arms under identical splits and
+  seeds: geometry-only (Table 1 files above), geometry+counts
+  (`--model dgcnn_fusion --extra-features manc_fusion_features.json`; four
+  log1p-scaled synapse-count scalars concatenated at the pooled layer), and the
+  counts-only guardrail baseline (`--model counts_mlp`). Run 2026-08-11.
+- `manc_fusionperm_{neuron_class,subclass,hemilineage}.json` — **permutation
+  control** (Methods): count features shuffled across neurons; the fusion gain
+  must vanish. Run 2026-08-12.
+- `manc_fusion_leakctrl_{neuron_class,subclass,hemilineage}.json` —
+  **cell-type-held-out fusion control** (Methods): the fusion arm rerun under
+  the whole-cell-type-held-out split. Run 2026-08-12.
+- `manc_fusion_features.json` — the per-neuron linked-feature table joined to
+  each mesh by body id: `[log1p(pre), log1p(post), log1p(pre+post),
+  pre/(pre+post)]`, derived from the neuPrint `manc:v1.2.1` annotations fetched
+  2026-08-11 (raw rows in `manc_synapse_meta.json`). Regenerate with
+  `python -m mudm_paper.fusion_features` (or from `manc_synapse_meta.json`).
+- `synapse_probe_results.json` — the **counts-only leakage probe** run and
+  deposited BEFORE the fusion experiment (Methods): counts-only classifiers
+  score far below geometry on the learnable tasks, so linked counts are signal
+  to fuse, not a label leak. Script: `mudm_paper/synapse_probe.py`. Run
+  2026-08-11.
+- `nyxus_stability_summary.json` — **source for Extended Data Table 4**
+  (feature robustness across 2D polygon levels): 144 Nyxus morphology features
+  over ~187k PanNuke nuclei rasterized at five simplification levels
+  (τ = 0.5–8 px); per-level median absolute relative deviation and Spearman ρ
+  vs the unsimplified masks. Pipeline: `scripts/extract_pannuke_images.py` →
+  `mudm_paper.rasterize` → `scripts/nyxus_pipeline.py` →
+  `scripts/stability_analysis.py`. Run 2026-08-11. **PanNuke-derived: this file
+  is CC BY-NC-SA 4.0, not MIT — see `LICENSE-DATA.md`.**
 
 ## Reproducing Table 1
 

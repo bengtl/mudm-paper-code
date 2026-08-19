@@ -63,7 +63,8 @@ python figures/make_table1.py
 
 The same reader renders the other economy artifacts by prefix:
 `python figures/make_table1.py --prefix manc_leakctrl` (leakage-controlled check)
-and `--prefix flywire_economy` (the FlyWire second-connectome replication, once run).
+and `--prefix flywire_economy` (the FlyWire second-connectome replication,
+Extended Data Table 3; artifacts deposited in `results/`).
 
 **Leakage-controlled robustness check** (holds out entire cell types, so neither serial
 nor bilateral homologs appear in both train and test; regenerates `manc_leakctrl_*.json`):
@@ -106,7 +107,13 @@ pytest        # unit suite for the harness (loader/split, sampling, masking, sta
 |---|---|
 | Table 1 (storage vs balanced accuracy) | `results/manc_economy_*.json` → `figures/make_table1.py` |
 | Leakage-controlled robustness (Methods) | `results/manc_leakctrl_*.json`; `mudm_paper/leakage_analysis.py` |
-| Lossless-geometry fidelity (Extended Data Table 1) | `results/hemibrain_fidelity.json` |
+| Lossless-geometry fidelity (Extended Data Table 2) | `results/hemibrain_fidelity.json` |
+| FlyWire second-connectome economy (Extended Data Table 3) | `results/flywire_economy_*.json` |
+| Feature stability across polygon levels (Extended Data Table 4) | `results/nyxus_stability_summary.json`; `scripts/nyxus_pipeline.py`, `scripts/stability_analysis.py` |
+| Multimodal fusion (Extended Data Table 5, Results) | `results/manc_fusion_*.json`, `results/manc_countsonly_*.json`; `mudm_paper/fusion_features.py` |
+| Fusion controls: permutation + held-out types (Methods) | `results/manc_fusionperm_*.json`, `results/manc_fusion_leakctrl_*.json` |
+| Counts-only leakage probe (Methods) | `mudm_paper/synapse_probe.py`; `results/synapse_probe_results.json` |
+| Linked synapse-count feature table (Methods) | `results/manc_fusion_features.json` (provenance: `results/manc_synapse_meta.json`) |
 | Xenium ingest counts (Methods / catalog) | `results/B2_xenium_ingest_validation.json` |
 | glTF traversal cost (Extended Data) | `results/B6_gltf_decoder_comparison.json` |
 | 2D polygon LOD (Extended Data Fig. 1) | `figures/fig_s_2d_lod.py` |
