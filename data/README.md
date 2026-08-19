@@ -49,8 +49,12 @@ their upstream licence; the catalog records per-dataset provenance and licences.
 
 ## FlyWire second-connectome economy (subsample)
 
-Reproduces the Table 1 trade-off on a second, independent connectome. FlyWire is
-**CC BY-NC 4.0** — regenerate locally; do **not** redistribute the tiles. Step 1 needs
+Reproduces the Table 1 trade-off on a second, independent connectome. FlyWire's
+public release is **CC BY-NC 4.0**: the public catalog serves a small curated
+FlyWire subsample as tiles under that licence with attribution, but the full
+16,379-neuron experiment pyramid is not served — regenerate it locally as
+follows, and treat the result as CC BY-NC 4.0 (non-commercial, attribute the
+FlyWire papers). Step 1 needs
 a `mudm-tools` git checkout (its `download_flywire.py` is not in the PyPI wheel) with
 `cloud-volume` available; the remaining steps use this package.
 

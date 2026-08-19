@@ -97,23 +97,36 @@ def _edge_feature(x, k, mask=None):       # x: [B,C,N] -> [B,2C,N,k]
     return torch.cat((feat - center, center), dim=3).permute(0, 3, 1, 2).contiguous()
 
 class DGCNN(nn.Module):
-    """Compact EdgeConv DGCNN (sampling-robust arm)."""
-    def __init__(self, n_classes: int, k: int = 20):
+    """Compact EdgeConv DGCNN (sampling-robust arm).
+
+    `n_extra` > 0 turns it into the FUSION arm: per-sample scalar features
+    (e.g. log-synapse counts, see fusion_features.py) are concatenated to
+    the pooled global feature before the classifier head. `n_extra=0`
+    (default) is the geometry-only model, bit-identical to the pre-fusion
+    architecture.
+    """
+    def __init__(self, n_classes: int, k: int = 20, n_extra: int = 0):
         super().__init__()
         self.k = k
+        self.n_extra = n_extra
         self.conv1 = nn.Sequential(nn.Conv2d(6, 64, 1, bias=False), nn.BatchNorm2d(64), nn.LeakyReLU(0.2))
         self.conv2 = nn.Sequential(nn.Conv2d(128, 64, 1, bias=False), nn.BatchNorm2d(64), nn.LeakyReLU(0.2))
         self.conv_out = nn.Sequential(nn.Conv1d(128, 256, 1, bias=False), nn.BatchNorm1d(256), nn.LeakyReLU(0.2))
-        self.head = nn.Sequential(nn.Linear(256, 128), nn.LeakyReLU(0.2), nn.Dropout(0.3), nn.Linear(128, n_classes))
+        self.head = nn.Sequential(nn.Linear(256 + n_extra, 128), nn.LeakyReLU(0.2), nn.Dropout(0.3), nn.Linear(128, n_classes))
 
-    def forward(self, x, mask=None):      # x: [B,3,N] -> [B,n_classes]
+    def forward(self, x, mask=None, extra=None):      # x: [B,3,N] -> [B,n_classes]
         """See PointNet.forward for the `mask` contract (None preserves the
         original unmasked behavior). DGCNN additionally clamps its kNN `k`
         to the batch's minimum VALID point count (never dips into masked
         padding to fill out a neighbor list), and never lets a masked
         neighbor be selected in the first place (`_knn_idx`'s own mask
         handling) -- both needed for appending masked padding to leave the
-        output exactly unchanged in eval mode."""
+        output exactly unchanged in eval mode.
+
+        `extra`: [B, n_extra] per-sample scalar features, fused after the
+        global pool. `None` with `n_extra` > 0 is treated as zeros, so
+        geometry-only probes (cost.forward_flops's bare `model(x)` call)
+        still run; with `n_extra == 0` it is ignored entirely."""
         if mask is not None:
             if mask.size(0) == 0:
                 min_valid = 0                    # empty batch (e.g. a degenerate test split)
@@ -128,4 +141,31 @@ class DGCNN(nn.Module):
         if mask is not None:
             x = x.masked_fill(~mask.unsqueeze(1), float("-inf"))
         x = x.max(dim=-1)[0]
+        if self.n_extra:
+            if extra is None:
+                extra = x.new_zeros((x.size(0), self.n_extra))
+            x = torch.cat((x, extra.to(dtype=x.dtype, device=x.device)), dim=1)
         return self.head(x)
+
+
+class CountsMLP(nn.Module):
+    """Geometry-free baseline over the same per-sample scalar features (the
+    counts-only arm of the fusion guardrail: a fusion win only stands if it
+    beats BOTH the geometry-only DGCNN and this model under the identical
+    split/seed/epoch protocol). Takes the shared (x, mask, extra) forward
+    contract but reads ONLY `extra`; x fixes the batch size and device when
+    `extra` is None (zero-fill, mirroring DGCNN's cost-probe path)."""
+
+    def __init__(self, n_classes: int, n_extra: int):
+        super().__init__()
+        self.n_extra = n_extra
+        self.net = nn.Sequential(
+            nn.Linear(n_extra, 64), nn.ReLU(), nn.Dropout(0.3),
+            nn.Linear(64, 64), nn.ReLU(),
+            nn.Linear(64, n_classes),
+        )
+
+    def forward(self, x, mask=None, extra=None):
+        if extra is None:
+            extra = x.new_zeros((x.size(0), self.n_extra))
+        return self.net(extra.to(dtype=torch.float32, device=x.device))

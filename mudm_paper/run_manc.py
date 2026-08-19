@@ -224,6 +224,16 @@ def main(argv=None):
         type=str,
         help="Output filename prefix for --out-dir mode (<prefix>_<label>.json).",
     )
+    parser.add_argument(
+        "--extra-features",
+        default=None,
+        type=str,
+        help=(
+            "JSON file mapping body_id -> [floats] of per-neuron scalar "
+            "features (see fusion_features.py). Required for the fusion "
+            "models (--model dgcnn_fusion or counts_mlp)."
+        ),
+    )
 
     args = parser.parse_args(argv)
 
@@ -238,6 +248,9 @@ def main(argv=None):
         config["group_field"] = args.group_field
     if args.labels:
         config["labels"] = args.labels.split(",")
+    if args.extra_features:
+        with open(args.extra_features) as f:
+            config["extra_features"] = json.load(f)
 
     # Table 1 reproduction (or the leakage-controlled variant via --group-field
     # / --labels / --prefix): one validator-ready JSON per label.

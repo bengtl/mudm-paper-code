@@ -51,13 +51,39 @@ import torch.nn.functional as F
 from mudm_paper.cost import forward_flops, lod_storage
 from mudm_paper.data import grouped_stratified_split, load_labels, load_neuron_lods
 from mudm_paper.knee import moving_knee
-from mudm_paper.models import DGCNN, PointNet
+from mudm_paper.models import DGCNN, CountsMLP, PointNet
 from mudm_paper.qem import onthefly_qem
 from mudm_paper.sampling import sample_to_budget
 from mudm_paper.stats import aggregate, tost_equivalence
 
 _SIDE_SUFFIX = re.compile(r"_[LR]$")
 _MODEL_FACTORY = {"pointnet": PointNet, "dgcnn": DGCNN}
+# Models that consume per-sample extra features (config["extra_features"]):
+# the fusion arm and its counts-only guardrail baseline.
+_EXTRA_MODELS = {"dgcnn_fusion", "counts_mlp"}
+
+
+def _make_model(model_name: str, n_classes: int, n_extra: int = 0):
+    """Instantiate a model by config name. The two `_EXTRA_MODELS` take the
+    extra-feature width; the geometry-only models keep their original
+    constructors untouched."""
+    if model_name == "dgcnn_fusion":
+        return DGCNN(n_classes, n_extra=n_extra)
+    if model_name == "counts_mlp":
+        return CountsMLP(n_classes, n_extra)
+    return _MODEL_FACTORY[model_name](n_classes)
+
+
+def _build_extra(body_ids: list, extra_map: dict) -> torch.Tensor:
+    """[B, n_extra] float32 tensor of per-sample extra features, row-aligned
+    with `body_ids`. Raises KeyError on an uncovered body_id -- run_sweep
+    drops uncovered ids from eligibility up front (mirroring the group_field
+    coverage rule), so a miss here is a bug, not data sparsity. Empty
+    `body_ids` -> [0, n_extra] (same empty-split tolerance as `_build_xy`)."""
+    n_extra = len(next(iter(extra_map.values())))
+    if not body_ids:
+        return torch.empty((0, n_extra), dtype=torch.float32)
+    return torch.tensor([extra_map[b] for b in body_ids], dtype=torch.float32)
 
 
 def _arm_method_and_levels(arm: str, levels: list) -> tuple:
@@ -200,7 +226,7 @@ def _build_xy(
 
 def _batched_predict(
     model: torch.nn.Module, x: torch.Tensor, mask: torch.Tensor,
-    batch_size: int, device: str,
+    batch_size: int, device: str, extra: torch.Tensor | None = None,
 ) -> np.ndarray:
     """Argmax class predictions for every row of `x`, computed in mini-batches
     of `batch_size`. Returns a 1-D int64 numpy array of length `x.shape[0]`.
@@ -224,7 +250,11 @@ def _batched_predict(
     for start in range(0, x.shape[0], batch_size):
         xb = x[start:start + batch_size].to(device)
         mb = mask[start:start + batch_size].to(device)
-        chunks.append(model(xb, mb).argmax(dim=1).cpu())
+        if extra is None:
+            logits = model(xb, mb)
+        else:
+            logits = model(xb, mb, extra[start:start + batch_size].to(device))
+        chunks.append(logits.argmax(dim=1).cpu())
     if not chunks:
         return np.empty((0,), dtype=np.int64)
     return torch.cat(chunks).numpy()
@@ -234,6 +264,7 @@ def _train_eval(
     model: torch.nn.Module, x_tr: torch.Tensor, y_tr: torch.Tensor, mask_tr: torch.Tensor,
     x_te: torch.Tensor, y_te: torch.Tensor, mask_te: torch.Tensor, epochs: int, lr: float,
     batch_size: int, device: str, n_classes: int,
+    extra_tr: torch.Tensor | None = None, extra_te: torch.Tensor | None = None,
 ) -> tuple:
     """Train `model` for `epochs` full passes over (x_tr, y_tr) with Adam +
     cross-entropy (shuffled mini-batches of `batch_size`), then evaluate on
@@ -251,6 +282,8 @@ def _train_eval(
     """
     model = model.to(device)
     x_tr, y_tr, mask_tr = x_tr.to(device), y_tr.to(device), mask_tr.to(device)
+    if extra_tr is not None:
+        extra_tr = extra_tr.to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
     n = x_tr.shape[0]
 
@@ -264,14 +297,17 @@ def _train_eval(
                 # a stray remainder batch of size 1 would otherwise crash.
                 continue
             optimizer.zero_grad()
-            logits = model(x_tr[batch_idx], mask_tr[batch_idx])
+            if extra_tr is None:
+                logits = model(x_tr[batch_idx], mask_tr[batch_idx])
+            else:
+                logits = model(x_tr[batch_idx], mask_tr[batch_idx], extra_tr[batch_idx])
             loss = F.cross_entropy(logits, y_tr[batch_idx])
             loss.backward()
             optimizer.step()
 
     model.eval()
     with torch.no_grad():
-        preds = _batched_predict(model, x_te, mask_te, batch_size, device)
+        preds = _batched_predict(model, x_te, mask_te, batch_size, device, extra=extra_te)
     y_true = y_te.cpu().numpy()
     acc = float((preds == y_true).mean()) if len(y_true) else 0.0
     bal_acc = _balanced_accuracy(y_true, preds, n_classes)
@@ -342,6 +378,19 @@ def run_sweep(parquet_dir: str, config: dict) -> dict:
     lr = config.get("lr", 1e-3)
     batch_size = config.get("batch_size", 32)
 
+    # Fusion support: models in _EXTRA_MODELS consume per-neuron scalar
+    # features from config["extra_features"] ({body_id: [floats]}). Coverage
+    # is enforced like group_field coverage -- uncovered neurons are dropped
+    # from eligibility (below), never imputed.
+    extra_map = config.get("extra_features")
+    needs_extra = model_name in _EXTRA_MODELS
+    if needs_extra and not extra_map:
+        raise ValueError(
+            f"model {model_name!r} requires config['extra_features'] "
+            "({body_id: [floats]}; see fusion_features.py)"
+        )
+    n_extra = len(next(iter(extra_map.values()))) if needs_extra else 0
+
     finest = max(levels)
     coarsest = min(levels)
 
@@ -396,6 +445,15 @@ def run_sweep(parquet_dir: str, config: dict) -> dict:
                     f"group_field {group_field!r} coverage (missing/placeholder "
                     f"tag) to avoid ungrouped-singleton bilateral leakage"
                 )
+        if needs_extra:
+            n_before = len(body_ids)
+            body_ids = [b for b in body_ids if b in extra_map]
+            if len(body_ids) != n_before:
+                warnings.warn(
+                    f"label {label!r}: dropping {n_before - len(body_ids)} "
+                    f"neuron(s) lacking extra_features coverage (fusion arm "
+                    f"uses only neurons with measured scalar features)"
+                )
 
         acc_seeds: dict = {}
         bal_acc_seeds: dict = {}
@@ -448,6 +506,11 @@ def run_sweep(parquet_dir: str, config: dict) -> dict:
             for body_id in te:
                 meta_support[labels_map[body_id]] += 1
 
+            # Extra features are split- (seed-) dependent but arm/level/budget-
+            # independent -- build once per seed, aligned with tr/te order.
+            extra_tr = _build_extra(tr, extra_map) if needs_extra else None
+            extra_te = _build_extra(te, extra_map) if needs_extra else None
+
             for arm in arms:
                 method, arm_levels = _arm_method_and_levels(arm, levels)
                 for level in arm_levels:
@@ -458,10 +521,11 @@ def run_sweep(parquet_dir: str, config: dict) -> dict:
                         x_te, y_te, mask_te, ns_te = _build_xy(
                             te, lods, level, method, budget, seed, labels_map, cls_idx, qem_cache
                         )
-                        model = _MODEL_FACTORY[model_name](len(classes))
+                        model = _make_model(model_name, len(classes), n_extra)
                         acc, bal_acc, f1 = _train_eval(
                             model, x_tr, y_tr, mask_tr, x_te, y_te, mask_te,
-                            epochs, lr, batch_size, device, len(classes)
+                            epochs, lr, batch_size, device, len(classes),
+                            extra_tr=extra_tr, extra_te=extra_te,
                         )
                         acc_seeds[arm][level][budget].append(acc)
                         bal_acc_seeds[arm][level][budget].append(bal_acc)
@@ -509,7 +573,7 @@ def run_sweep(parquet_dir: str, config: dict) -> dict:
 
     # --- cost axis: storage per LOD (muDM-attributable) + FLOPs (budget-driven context) ---
     storage = lod_storage(parquet_dir)
-    cost_model = _MODEL_FACTORY[model_name](last_n_classes or 2)
+    cost_model = _make_model(model_name, last_n_classes or 2, n_extra)
     result["cost"] = {
         "storage_per_level": storage,
         "flops": {budget: forward_flops(cost_model, budget) for budget in budgets},

@@ -113,8 +113,11 @@ pytest        # unit suite for the harness (loader/split, sampling, masking, sta
 
 ## License & citation
 
-MIT (matching `mudm` / `mudm-tools`). If you use this code, please cite the muDM paper
-and the `mudm` / `mudm-tools` releases (Zenodo DOI on acceptance).
+Code: MIT (matching `mudm` / `mudm-tools`). Data artifacts derived from
+third-party datasets carry the upstream licence instead — in particular the
+PanNuke-derived stability tables are **CC BY-NC-SA 4.0**; see
+`LICENSE-DATA.md` for the file list. If you use this code, please cite the
+muDM paper and the `mudm` / `mudm-tools` releases (Zenodo DOI on acceptance).
 
 > Not included here: the retired Hemibrain "coarse-beats-fine" artifacts (a vertex-cap
 > truncation artifact, removed from the paper) and the benchmark-result schema-emission
