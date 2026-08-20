@@ -1,6 +1,6 @@
 {
   "benchmark_id": "manc_countsonly_neuron_class",
-  "timestamp": "2026-08-11T18:46:22Z",
+  "timestamp": "2026-08-20T02:07:46Z",
   "hardware": {
     "cpu_cores": 80,
     "gpu": "NVIDIA RTX A4500, NVIDIA RTX A4500"
@@ -413,33 +413,33 @@
   "cost": {
     "storage_per_level": {
       "0": {
-        "compressed_bytes": 164548103,
-        "uncompressed_bytes": 290749186,
-        "total_verts": 13008039,
-        "ratio_to_finest": 98.49295168791977
+        "compressed_bytes": 164437478,
+        "uncompressed_bytes": 290609880,
+        "total_verts": 13008076,
+        "ratio_to_finest": 98.23088161696361
       },
       "1": {
-        "compressed_bytes": 294450005,
-        "uncompressed_bytes": 541986265,
-        "total_verts": 21133957,
-        "ratio_to_finest": 52.836662807313026
+        "compressed_bytes": 294203844,
+        "uncompressed_bytes": 541921205,
+        "total_verts": 21128190,
+        "ratio_to_finest": 52.67715021227117
       },
       "2": {
-        "compressed_bytes": 717451065,
-        "uncompressed_bytes": 1388999241,
-        "total_verts": 46005742,
-        "ratio_to_finest": 20.61681870278286
+        "compressed_bytes": 716683992,
+        "uncompressed_bytes": 1388469248,
+        "total_verts": 45992498,
+        "ratio_to_finest": 20.559954611972795
       },
       "3": {
-        "compressed_bytes": 1934243266,
-        "uncompressed_bytes": 3889193343,
-        "total_verts": 116770902,
-        "ratio_to_finest": 7.363158116461889
+        "compressed_bytes": 1930680864,
+        "uncompressed_bytes": 3886035014,
+        "total_verts": 116715251,
+        "ratio_to_finest": 7.346013254166731
       },
       "4": {
-        "compressed_bytes": 10225543038,
-        "uncompressed_bytes": 28636745530,
-        "total_verts": 807152056,
+        "compressed_bytes": 10135576392,
+        "uncompressed_bytes": 28546864719,
+        "total_verts": 805872933,
         "ratio_to_finest": 1.0
       }
     },

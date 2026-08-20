@@ -11,22 +11,33 @@ the companion data catalogue, for dataset-scale numbers — see note below). If 
 number in the paper cannot be traced, the claim must be removed or the benchmark
 rerun.
 
+## v0.6.4 re-run (2026-08-19/20)
+
+Every ML result artifact below (economy, leakage controls, fusion + its two
+controls, FlyWire economy, PointNet) was regenerated on 2026-08-19/20 under the
+**released `mudm==0.6.4` / `mudm-tools==0.6.4` wheels**, on pyramids re-tiled
+under v0.6.4, with the same training stack as the original runs (torch
+2.12.0+cu130, Python 3.13.2, 80-core + 2x A4500 host). Values match the
+superseded v0.6.3-era runs within seed noise (largest per-cell drift in Table 1:
+0.005); the superseded artifacts are preserved in git history. The deployed
+public catalog remains a v0.6.3 product and is documented as such in the paper.
+
 ## Files present
 
 - `manc_economy_{neuron_class,subclass,hemilineage,cell_type}.json` — **source for
   Table 1** (storage versus balanced accuracy across the MANC 3D-mesh pyramid).
   DGCNN, 512-vertex budget, 15 seeds, uncapped, precomputed levels z0–z4. Each
   file carries per-seed balanced-accuracy `raw` arrays, per-level storage
-  (`cost.storage_per_level`; z0–z4 uncompressed 0.29 / 0.54 / 1.39 / 3.89 / 28.64
-  GB, a 98.5× range) and the run `config` (epochs 8, batch 64, seeds 15). Run on
-  the 80-core + 2× A4500 box, 2026-07-16 (E2-confirm).
+  (`cost.storage_per_level`; z0–z4 uncompressed 0.29 / 0.54 / 1.39 / 3.89 / 28.55
+  GB, a 98.2× range) and the run `config` (epochs 8, batch 64, seeds 15). Original
+  E2-confirm run 2026-07-16; regenerated 2026-08-19/20 under v0.6.4 (see note above).
 - `manc_leakctrl_{neuron_class,subclass,hemilineage}.json` — **leakage-controlled
   robustness check** for the serial-homolog concern (Methods). Same paper config,
   but the train/val/test split is grouped by `cell_type` (holding out entire cell
   types, so neither serial nor bilateral homologs appear in both train and test),
   15 seeds. Coarsest-level retention stays within a few points of the
-  instance-grouped Table 1 (94/86/88% at neuron class / subclass / hemilineage,
-  versus 93/90/88% here), so the storage-versus-accuracy trade-off is not an
+  instance-grouped Table 1 (93/87/87% at neuron class / subclass / hemilineage,
+  versus 93/89/89% here), so the storage-versus-accuracy trade-off is not an
   artifact of homolog leakage. Regenerate with
   `run_manc --out-dir <dir> --group-field cell_type --labels neuron_class,subclass,hemilineage --prefix manc_leakctrl`.
   The 38–42% serial-homolog exposure figure cited in Methods is reproduced by
@@ -99,7 +110,17 @@ rerun.
   vs the unsimplified masks. Pipeline: `scripts/extract_pannuke_images.py` →
   `mudm_paper.rasterize` → `scripts/nyxus_pipeline.py` →
   `scripts/stability_analysis.py`. Run 2026-08-11. **PanNuke-derived: this file
-  is CC BY-NC-SA 4.0, not MIT — see `LICENSE-DATA.md`.**
+  is CC BY-NC-SA 4.0, not MIT — see `LICENSE-DATA.md`.** (Not part of the v0.6.4
+  re-run: the rasterizer is harness-internal and parity-tested against the
+  v0.6.4 simplification.)
+- `manc_pointnet_{neuron_class,subclass,hemilineage,cell_type}.json` —
+  **second-architecture robustness sweep** (PointNet instead of DGCNN, otherwise
+  the exact Table 1 protocol: 512-vertex budget, 15 seeds, instance-grouped
+  split, levels z0–z4). Coarsest-level retention 94/93/99/80% at neuron class /
+  subclass / hemilineage / cell type, at or above DGCNN's 93/87/87/56%, so the
+  storage-versus-accuracy economy is not specific to one point-cloud
+  architecture. Run 2026-08-20 under v0.6.4. Regenerate with
+  `run_manc --out-dir <dir> --model pointnet --prefix manc_pointnet`.
 
 ## Reproducing Table 1
 
@@ -160,6 +181,12 @@ Run the schema validator and figure scripts from the paper repo:
 uv run python results/_schema_validator.py results/*.json
 uv run pytest results/_test_schema_validator.py -v
 ```
+
+Two files are data tables, not benchmark results, and are exempt from the
+benchmark header schema (they carry no `timestamp`/`benchmark_id`):
+`manc_fusion_features.json` (the linked-feature table) and
+`manc_synapse_meta.json` (raw neuPrint rows). The retired `hemibrain_5seed.json`
+and `hemibrain_economy.json` fail the schema by design (see their entries).
 
 The paper repo declares its own `pyproject.toml` with the dependencies needed for
 figure scripts (matplotlib, numpy, pandas, pyarrow, brotli, scipy) and schema

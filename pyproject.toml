@@ -11,8 +11,8 @@ license = { text = "MIT" }
 readme = "README.md"
 dependencies = [
     # Pinned to the exact releases used for the paper (public on PyPI).
-    "mudm==0.6.1",
-    "mudm-tools==0.6.3",
+    "mudm==0.6.4",
+    "mudm-tools==0.6.4",
     # Analysis stack for the economy sweep.
     "torch>=2.0",
     "numpy>=1.26",

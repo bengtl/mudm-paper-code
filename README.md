@@ -9,8 +9,8 @@ are read from.
 This repository is **analysis code only**. The muDM data model and the tiling
 pipeline are released separately and are dependencies here:
 
-- **`mudm`** (data model) — <https://github.com/NovagenResearch/mudm>, PyPI `mudm==0.6.1`
-- **`mudm-tools`** (pipeline, viewers) — <https://github.com/NovagenResearch/mudm-tools>, PyPI `mudm-tools==0.6.3`
+- **`mudm`** (data model) — <https://github.com/NovagenResearch/mudm>, PyPI `mudm==0.6.4`
+- **`mudm-tools`** (pipeline, viewers) — <https://github.com/NovagenResearch/mudm-tools>, PyPI `mudm-tools==0.6.4`
 - **Public data catalog** — <https://ngrf.mudm.io> (the tiled MANC pyramid used below is served as `manc-full`)
 
 ## Layout
