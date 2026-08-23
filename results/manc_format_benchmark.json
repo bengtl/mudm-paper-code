@@ -1,0 +1,179 @@
+{
+  "benchmark_id": "manc_format_benchmark",
+  "timestamp": "2026-08-21T17:54:48Z",
+  "hardware": {
+    "cpu_cores": 80,
+    "gpu": "NVIDIA RTX A4500, NVIDIA RTX A4500"
+  },
+  "results": {
+    "n_neurons_total": 23546,
+    "n_sampled": 200,
+    "n_sampled_features": 200,
+    "shared_index_build_s": 219.19312169099976,
+    "encode": {
+      "parquet": {
+        "encode_s": 372.927194546,
+        "stored_bytes": 13263474429,
+        "size_per_zoom": {
+          "0": 164173726,
+          "1": 293652313,
+          "2": 715846322,
+          "3": 1929638176,
+          "4": 10160163892
+        },
+        "peak_rss_bytes_after": 25820340224,
+        "peak_rss_after": {
+          "platform": "linux",
+          "ru_maxrss_raw": 25215176,
+          "ru_maxrss_units": "kilobytes",
+          "ru_maxrss_bytes": 25820340224
+        }
+      },
+      "tiles3d": {
+        "encode_s": 79.85127187200032,
+        "stored_bytes": 9016439701,
+        "peak_rss_bytes_after": 141443997696,
+        "peak_rss_after": {
+          "platform": "linux",
+          "ru_maxrss_raw": 138128904,
+          "ru_maxrss_units": "kilobytes",
+          "ru_maxrss_bytes": 141443997696
+        }
+      },
+      "neuroglancer": {
+        "encode_s": 147.6495940040004,
+        "stored_bytes": 4214130280,
+        "peak_rss_bytes_after": 200049676288,
+        "peak_rss_after": {
+          "platform": "linux",
+          "ru_maxrss_raw": 195361012,
+          "ru_maxrss_units": "kilobytes",
+          "ru_maxrss_bytes": 200049676288
+        },
+        "sharded": false,
+        "vertex_quantization_bits": 10
+      }
+    },
+    "decode": {
+      "obj": {
+        "iters": 10,
+        "n_neurons": 200,
+        "median_total_s": 11.426299395000115,
+        "p95_total_s": 11.646404909999546,
+        "median_per_neuron_s": 0.05713149697500057,
+        "peak_rss_after_decode": {
+          "platform": "linux",
+          "ru_maxrss_raw": 195361012,
+          "ru_maxrss_units": "kilobytes",
+          "ru_maxrss_bytes": 200049676288
+        }
+      },
+      "parquet": {
+        "iters": 10,
+        "n_neurons": 200,
+        "median_total_s": 6.951455740999336,
+        "p95_total_s": 7.700645361999705,
+        "median_per_neuron_s": 0.03475727870499668,
+        "peak_rss_after_decode": {
+          "platform": "linux",
+          "ru_maxrss_raw": 197492444,
+          "ru_maxrss_units": "kilobytes",
+          "ru_maxrss_bytes": 202232262656
+        }
+      },
+      "tiles3d": {
+        "iters": 10,
+        "n_neurons": 200,
+        "median_total_s": 35.29225705750014,
+        "p95_total_s": 35.748183153000355,
+        "median_per_neuron_s": 0.17646128528750069,
+        "peak_rss_after_decode": {
+          "platform": "linux",
+          "ru_maxrss_raw": 204725180,
+          "ru_maxrss_units": "kilobytes",
+          "ru_maxrss_bytes": 209638584320
+        }
+      },
+      "neuroglancer": {
+        "iters": 10,
+        "n_neurons": 200,
+        "median_total_s": 5.540429888500057,
+        "p95_total_s": 6.315526352999768,
+        "median_per_neuron_s": 0.027702149442500285,
+        "peak_rss_after_decode": {
+          "platform": "linux",
+          "ru_maxrss_raw": 204902596,
+          "ru_maxrss_units": "kilobytes",
+          "ru_maxrss_bytes": 209820258304
+        }
+      }
+    },
+    "random_access": {
+      "parquet": {
+        "n_keys": 50,
+        "iters_per_key": 10,
+        "n_samples": 500,
+        "median_s": 0.4229614975001823,
+        "p95_s": 0.49369031800051744
+      },
+      "tiles3d": {
+        "index_build_s": 18.27875054099968,
+        "n_keys": 50,
+        "iters_per_key": 10,
+        "n_samples": 500,
+        "median_s": 1.5502248445004625,
+        "p95_s": 6.698303807999764
+      },
+      "neuroglancer": {
+        "n_keys": 50,
+        "iters_per_key": 10,
+        "n_samples": 500,
+        "median_s": 0.055695746499623056,
+        "p95_s": 0.18340983799953392
+      }
+    },
+    "fidelity": {
+      "parquet": {
+        "n_neurons": 200,
+        "metrics_used": [
+          "set_based"
+        ],
+        "mean_l2": 0.012715259536231071,
+        "max_l2": 0.03561376307087201,
+        "p95_l2": 0.022756045468995265,
+        "rel_mean_l2": 6.870112827259115e-08,
+        "rel_max_l2": 1.8053858319003586e-07
+      },
+      "tiles3d": {
+        "n_neurons": 200,
+        "metrics_used": [
+          "set_based"
+        ],
+        "mean_l2": 0.583978894352189,
+        "max_l2": 1.4362409821710562,
+        "p95_l2": 1.1045170016785106,
+        "rel_mean_l2": 3.0822866224593215e-06,
+        "rel_max_l2": 7.592644960034251e-06
+      },
+      "neuroglancer": {
+        "n_neurons": 200,
+        "metrics_used": [
+          "set_based"
+        ],
+        "mean_l2": 20.64986182304728,
+        "max_l2": 464.473860214354,
+        "p95_l2": 45.24062786161402,
+        "rel_mean_l2": 0.00011394446202796488,
+        "rel_max_l2": 0.0024763554109649465
+      }
+    }
+  },
+  "config": {
+    "obj_dir": "/data/ai/mudm-paper/mudm-tools/data/manc-full/meshes",
+    "n": 200,
+    "max_zoom": 4,
+    "iters": 10,
+    "sharded": false,
+    "out_root": "/data/ai/mudm-paper/exp/manc-full/formats064_out"
+  }
+}

@@ -1,0 +1,79 @@
+{
+  "benchmark_id": "manc_access_benchmark",
+  "timestamp": "2026-08-21T18:11:59Z",
+  "hardware": {
+    "cpu_cores": 80,
+    "gpu": "NVIDIA RTX A4500, NVIDIA RTX A4500"
+  },
+  "results": {
+    "zoom": 4,
+    "n_neurons_total": 23546,
+    "bulk_read": {
+      "n_total": 23546,
+      "bulk_n_measured": 2000,
+      "parquet_whole_level_s": 21.392768916999557,
+      "parquet_per_neuron_ms": 0.9085521497069378,
+      "neuroglancer_per_neuron_ms": 70.00550337300001,
+      "neuroglancer_whole_level_extrap_s": 1648.3495824206584,
+      "tiles3d_per_neuron_ms": 28.767469991500093,
+      "tiles3d_whole_level_extrap_s": 677.3588484198613,
+      "obj_per_neuron_ms": 178.67800552900007,
+      "obj_whole_level_extrap_s": 4207.152318185836,
+      "bytes_read_parquet_whole_level": 4715564097
+    },
+    "spatial_window": {
+      "window": "3x3 tiles",
+      "rows_returned": 117178,
+      "parquet_window_s": 2.3799135829995066,
+      "parquet_whole_level_s": 21.392768916999557,
+      "speedup_vs_whole_level": 8.98888475187294,
+      "bytes_read_parquet_window": 2683675033
+    },
+    "by_id_default": {
+      "n_keys": 50,
+      "iters_per_key": 5,
+      "n_samples": 250,
+      "median_s": 0.3304369819998101,
+      "p95_s": 0.37781741699927807
+    },
+    "by_id_feature_sorted": {
+      "n_keys": 50,
+      "iters_per_key": 5,
+      "n_samples": 250,
+      "median_s": 0.08296757049993175,
+      "p95_s": 0.11469331700027396,
+      "relayout_s": 282.11760904399944,
+      "relayout_bytes": 10034513946
+    },
+    "by_id_neuroglancer": {
+      "n_keys": 50,
+      "iters_per_key": 5,
+      "n_samples": 250,
+      "median_s": 0.010468546000083734,
+      "p95_s": 0.1899573849996159
+    },
+    "feature_record_join": {
+      "window": "3x3 tiles",
+      "records_file": "manc_fusion_features.json",
+      "n_records": 23546,
+      "n_window_features": 11745,
+      "n_joined": 11745,
+      "parquet_join_s": 2.1328211350000856,
+      "ng_sample_n": 200,
+      "ng_fetch_join_s": 16.241071012999782,
+      "ng_fetch_join_extrap_s": 953.7568952384123,
+      "bytes_read_parquet_join": 2683675064,
+      "bytes_read_ng_sample": 90835652
+    },
+    "peak_rss_bytes": 99243630592
+  },
+  "config": {
+    "out_root": "/data/ai/mudm-paper/exp/manc-full/formats064_out",
+    "zoom": 4,
+    "bulk_n": 2000,
+    "n_ids": 50,
+    "iters": 5,
+    "records_json": "/data/ai/mudm-paper/exp/manc-full/manc_fusion_features.json",
+    "join_n": 200
+  }
+}

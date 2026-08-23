@@ -114,8 +114,11 @@ pytest        # unit suite for the harness (loader/split, sampling, masking, sta
 | Fusion controls: permutation + held-out types (Methods) | `results/manc_fusionperm_*.json`, `results/manc_fusion_leakctrl_*.json` |
 | Counts-only leakage probe (Methods) | `mudm_paper/synapse_probe.py`; `results/synapse_probe_results.json` |
 | Linked synapse-count feature table (Methods) | `results/manc_fusion_features.json` (provenance: `results/manc_synapse_meta.json`) |
+| Read-path / queryability numbers (Results, Methods) | `results/manc_access_benchmark.json` |
+| Format spec-sheet: encode/decode/fidelity per format (Extended Data) | `results/manc_format_benchmark.json` |
+| Second-architecture robustness, PointNet (Methods) | `results/manc_pointnet_*.json` |
 | Xenium ingest counts (Methods / catalog) | `results/B2_xenium_ingest_validation.json` |
-| glTF traversal cost (Extended Data) | `results/B6_gltf_decoder_comparison.json` |
+| glTF traversal micro-probe (Extended Data) | `results/B6_gltf_decoder_comparison.json` |
 | 2D polygon LOD (Extended Data Fig. 1) | `figures/fig_s_2d_lod.py` |
 
 ## License & citation
