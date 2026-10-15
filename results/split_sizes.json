@@ -1,0 +1,123 @@
+{
+ "neuron_class/instance": {
+  "n_train": 15323.8,
+  "n_val": 3356.2,
+  "n_test": 3266.0,
+  "n_classes": 7.0,
+  "classes_with_test": 7.0,
+  "classes_zero_test": 0.0,
+  "min_test_support": 10.133333333333333,
+  "n_eligible": 21952,
+  "seeds": 15
+ },
+ "neuron_class/ungrouped": {
+  "n_train": 16476.0,
+  "n_val": 3531.0,
+  "n_test": 3531.0,
+  "n_classes": 7.0,
+  "classes_with_test": 7.0,
+  "classes_zero_test": 0.0,
+  "min_test_support": 14.0,
+  "n_eligible": 23546,
+  "seeds": 15
+ },
+ "neuron_class/cell_type_heldout": {
+  "n_train": 15607.066666666668,
+  "n_val": 3159.6,
+  "n_test": 3179.3333333333335,
+  "n_classes": 7.0,
+  "classes_with_test": 7.0,
+  "classes_zero_test": 0.0,
+  "min_test_support": 9.133333333333333,
+  "n_eligible": 21952,
+  "seeds": 15
+ },
+ "subclass/instance": {
+  "n_train": 14423.2,
+  "n_val": 3097.6666666666665,
+  "n_test": 3095.133333333333,
+  "n_classes": 28.0,
+  "classes_with_test": 27.0,
+  "classes_zero_test": 1.0,
+  "min_test_support": 0.0,
+  "n_eligible": 20664,
+  "seeds": 15
+ },
+ "subclass/ungrouped": {
+  "n_train": 15352.0,
+  "n_val": 3292.0,
+  "n_test": 3292.0,
+  "n_classes": 29.0,
+  "classes_with_test": 29.0,
+  "classes_zero_test": 0.0,
+  "min_test_support": 3.0,
+  "n_eligible": 21970,
+  "seeds": 15
+ },
+ "subclass/cell_type_heldout": {
+  "n_train": 14493.933333333332,
+  "n_val": 3066.266666666667,
+  "n_test": 3055.8,
+  "n_classes": 28.0,
+  "classes_with_test": 26.0,
+  "classes_zero_test": 2.0,
+  "min_test_support": 0.0,
+  "n_eligible": 20664,
+  "seeds": 15
+ },
+ "hemilineage/instance": {
+  "n_train": 10072.133333333333,
+  "n_val": 2168.3333333333335,
+  "n_test": 2161.5333333333333,
+  "n_classes": 39.0,
+  "classes_with_test": 39.0,
+  "classes_zero_test": 0.0,
+  "min_test_support": 4.333333333333333,
+  "n_eligible": 14452,
+  "seeds": 15
+ },
+ "hemilineage/ungrouped": {
+  "n_train": 10994.0,
+  "n_val": 2357.0,
+  "n_test": 2357.0,
+  "n_classes": 39.0,
+  "classes_with_test": 39.0,
+  "classes_zero_test": 0.0,
+  "min_test_support": 5.0,
+  "n_eligible": 15758,
+  "seeds": 15
+ },
+ "hemilineage/cell_type_heldout": {
+  "n_train": 10122.066666666668,
+  "n_val": 2150.266666666667,
+  "n_test": 2129.6666666666665,
+  "n_classes": 39.0,
+  "classes_with_test": 38.4,
+  "classes_zero_test": 0.6,
+  "min_test_support": 1.8,
+  "n_eligible": 14452,
+  "seeds": 15
+ },
+ "cell_type/instance": {
+  "n_train": 5855.0,
+  "n_val": 141.26666666666668,
+  "n_test": 136.73333333333332,
+  "n_classes": 117.0,
+  "classes_with_test": 15.0,
+  "classes_zero_test": 102.0,
+  "min_test_support": 0.0,
+  "n_eligible": 21952,
+  "seeds": 15
+ },
+ "cell_type/ungrouped": {
+  "n_train": 4305.0,
+  "n_val": 914.0,
+  "n_test": 914.0,
+  "n_classes": 117.0,
+  "classes_with_test": 117.0,
+  "classes_zero_test": 0.0,
+  "min_test_support": 3.0,
+  "n_eligible": 21952,
+  "seeds": 15
+ }
+}

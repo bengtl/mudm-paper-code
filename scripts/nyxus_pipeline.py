@@ -7,7 +7,7 @@ Stages (idempotent; each skipped if its output exists):
   3. join on (file stem, label) and write a per-feature stability summary:
      median absolute relative deviation vs tau_0, per tau level
 
-Run:  PYTHONPATH=<repo> uv run --with nyxus --with pandas python nyxus_pipeline.py <workdir>
+Run (needs the stability extra):  uv run python scripts/nyxus_pipeline.py <workdir>
 """
 
 import json

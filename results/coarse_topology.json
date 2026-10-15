@@ -1,0 +1,52 @@
+{
+ "0": {
+  "n_neurons": 400,
+  "verts_mean": 478.1025,
+  "faces_unique_mean": 253.3475,
+  "V_over_F_median": 2.1941374279850656,
+  "components_median": 96.5,
+  "faces_per_component_median": 1.5780112336176408,
+  "boundary_edge_frac_mean": 0.7666782126273074,
+  "frac_verts_referenced": 0.9999918300653594
+ },
+ "1": {
+  "n_neurons": 400,
+  "verts_mean": 868.6975,
+  "faces_unique_mean": 740.775,
+  "V_over_F_median": 1.3479061491351485,
+  "components_median": 138.5,
+  "faces_per_component_median": 3.224529158157477,
+  "boundary_edge_frac_mean": 0.48271601817468296,
+  "frac_verts_referenced": 0.9999306516715077
+ },
+ "2": {
+  "n_neurons": 400,
+  "verts_mean": 1769.2425,
+  "faces_unique_mean": 2450.1475,
+  "V_over_F_median": 0.7654147129069366,
+  "components_median": 139.0,
+  "faces_per_component_median": 11.457772337821297,
+  "boundary_edge_frac_mean": 0.19272772544826489,
+  "frac_verts_referenced": 0.9999404852135663
+ },
+ "3": {
+  "n_neurons": 400,
+  "verts_mean": 5179.95,
+  "faces_unique_mean": 8792.56,
+  "V_over_F_median": 0.5924940207778648,
+  "components_median": 127.5,
+  "faces_per_component_median": 46.5345554834523,
+  "boundary_edge_frac_mean": 0.09084328267158534,
+  "frac_verts_referenced": 0.9999580303580876
+ },
+ "4": {
+  "n_neurons": 400,
+  "verts_mean": 32302.955,
+  "faces_unique_mean": 63862.89,
+  "V_over_F_median": 0.504084683733171,
+  "components_median": 101.5,
+  "faces_per_component_median": 453.31467181467184,
+  "boundary_edge_frac_mean": 0.004455070475673184,
+  "frac_verts_referenced": 1.0
+ }
+}

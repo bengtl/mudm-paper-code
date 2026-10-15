@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Launch the FlyWire second-connectome economy (the MANC replication).
 #
-# RUN THIS ON THE BOX (oden), from a mudm-tools git checkout, with this repo's
-# `mudm_paper` package importable (pip install -e <repo>  OR  PYTHONPATH=<repo>).
+# Run on a Linux GPU host, from a mudm-tools git checkout, with this repo's
+# `mudm_paper` package importable (uv sync in <repo>, or PYTHONPATH=<repo>).
 #
 # Two stages so you never burn GPU hours on a bad subsample:
 #   STAGE A (cheap): download the stratified subsample + build labels, then STOP
@@ -19,9 +19,9 @@ set -euo pipefail
 
 # --- config (override via env) ---
 N=${N:-30000}                                   # per-superclass stratified subsample cap
-DATA=${DATA:-/data/ai/mudm-paper/flywire}       # meshes + labels + pyramid live here (on /data)
+DATA=${DATA:?set DATA to a data directory}      # meshes + labels + pyramid live here
 OUT=${OUT:-$PWD/results}                         # where flywire_economy_*.json are written
-export TMPDIR=${TMPDIR:-/data/ai/mudm-paper/tmp} # box root is small — keep tiling temp on /data
+export TMPDIR=${TMPDIR:-$DATA/tmp}              # tiler spill files; keep on a large volume
 MUDM_TOOLS=${MUDM_TOOLS:-$PWD}                    # dir containing scripts/download_flywire.py
 STAGE=${STAGE:-A}
 
@@ -34,7 +34,7 @@ mkdir -p "$DATA" "$TMPDIR" "$OUT"
 
 # --- preflight ---
 python -c "import mudm_paper" 2>/dev/null || {
-  echo "ERROR: 'mudm_paper' not importable. pip install -e <repo>  or  export PYTHONPATH=<repo>." >&2; exit 1; }
+  echo "ERROR: 'mudm_paper' not importable. run uv sync in <repo>, or export PYTHONPATH=<repo>." >&2; exit 1; }
 [[ -f "$MUDM_TOOLS/scripts/download_flywire.py" ]] || {
   echo "ERROR: $MUDM_TOOLS/scripts/download_flywire.py not found. Set MUDM_TOOLS=<mudm-tools checkout>." >&2; exit 1; }
 

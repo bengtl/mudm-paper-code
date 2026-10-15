@@ -1,7 +1,7 @@
 """Fresh-tiling driver: OBJ meshes + JSON labels -> f32 parquet mesh pyramid.
 
 Phase-0 data-prep tool for the muDM economy harness (the bridge to the real
-oden data-prep run, Phase E0). Given a directory of `<body_id>.obj` neuron
+data-prep run). Given a directory of `<body_id>.obj` neuron
 meshes and a JSON file mapping body_id -> per-neuron metadata, this drives the
 REAL muDM Rust tiler (`mudm_tools._rs.StreamingTileGenerator`) to produce a
 partitioned parquet mesh pyramid at `out_dir/zoom={0..max_zoom}/part_*.parquet`,
@@ -65,8 +65,7 @@ def tile_to_parquet(
     bounds = scan_obj_bounds(paths)
 
     # Pass TMPDIR through explicitly: fragment shards can be large for real
-    # neuron meshes, and the box's root partition is often too small (see
-    # oden runbook). None (unset) falls back to the Rust default (std::env::temp_dir()).
+    # neuron meshes; point TMPDIR at a volume with room for them. None (unset) falls back to the Rust default (std::env::temp_dir()).
     temp_dir = os.environ.get("TMPDIR")
 
     gen = StreamingTileGenerator(

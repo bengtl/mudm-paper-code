@@ -1,6 +1,6 @@
 """Leakage probe: how well do synapse counts ALONE predict MANC type labels?
 
-Motivation (Nick, 2026-08-11): before committing to a multimodal experiment
+Motivation (2026-08-11): before committing to a multimodal experiment
 (geometry + synapse count), check whether synapse counts are quasi-label
 information -- MANC systematic types are partly connectivity-defined, so a
 high score here means adding counts risks circularity, not multimodal signal.
@@ -12,14 +12,15 @@ log1p(post), log1p(pre+post), and pre/(pre+post). Two models bracket the
 signal: multinomial logistic regression (linear) and gradient-boosted trees
 (nonlinear ceiling). Metric: balanced accuracy on the held-out test split,
 mean +/- sd over seeds -- directly comparable to the deposited DGCNN numbers
-in repo/results/manc_economy_<task>.json.
+in results/manc_economy_<task>.json.
 
-Run from the mudm-paper repo root:
-    PYTHONPATH=. uv run --with scikit-learn python <scratchpad>/synapse_probe.py
+Run from the repository root (needs the probe extra):
+    uv run python -m mudm_paper.synapse_probe [--out <file>]
 """
 
 from __future__ import annotations
 
+import argparse
 import json
 import urllib.request
 from pathlib import Path
@@ -31,7 +32,6 @@ from sklearn.metrics import balanced_accuracy_score
 
 from mudm_paper.data import _SIDE_SUFFIX, grouped_stratified_split
 
-SCRATCH = Path(__file__).parent
 CACHE = Path(__file__).parents[1] / "results" / "manc_synapse_meta.json"
 RESULTS_DIR = Path(__file__).parents[1] / "results"
 TASKS = ["neuron_class", "subclass", "hemilineage", "cell_type"]
@@ -87,6 +87,10 @@ def dgcnn_reference(task: str) -> dict:
 
 
 def main() -> int:
+    ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    ap.add_argument("--out", default=str(RESULTS_DIR / "synapse_probe_results.json"),
+                    help="output JSON (default: the deposited results/synapse_probe_results.json)")
+    args = ap.parse_args()
     rows = fetch()
     rows = [r for r in rows if r.get("pre") is not None and r.get("post") is not None
             and r.get("instance")]
@@ -149,7 +153,7 @@ def main() -> int:
             line = ", ".join(f"z{z}={ref[z]:.3f}" for z in zs)
             print(f"  DGCNN(b512) {line}")
 
-    out = RESULTS_DIR / "synapse_probe_results.json"
+    out = Path(args.out)
     out.write_text(json.dumps(summary, indent=1))
     print(f"\nwrote {out}")
     return 0

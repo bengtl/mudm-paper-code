@@ -1,0 +1,51 @@
+{
+  "benchmark_id": "flywire_full_tiling",
+  "timestamp": "2026-08-25T05:47:00Z",
+  "timestamp_note": "Start of the tiling step, to the minute (01:47 US Eastern daylight time, UTC-4); the run finished at 06:52 local time.",
+  "hardware": {
+    "cpu_cores": 80,
+    "gpu": "NVIDIA RTX A4500, NVIDIA RTX A4500",
+    "os": "Linux"
+  },
+  "config": {
+    "command_as_run": "/usr/bin/time -v tile_parquet --max-zoom 4 --base-cells 100 --io-threads 12",
+    "equivalent_command": "python -m mudm_paper.tile_parquet --obj-dir <flywire_full_obj_dir> --meta <flywire_full_meta.json> --out <pyramid_dir> --max-zoom 4 --base-cells 100 --io-threads 12",
+    "max_zoom": 4,
+    "base_cells": 100,
+    "io_threads": 12,
+    "outputs": "Parquet pyramid only (no 3D Tiles or Neuroglancer encode)",
+    "mudm_tools_version": "0.6.4",
+    "source_dataset": "FlyWire adult brain connectome, release 783 (public precomputed mesh bucket)",
+    "source_selection": "all proofread neurons with a numeric root_id in the FlyWire annotation table (mudm-tools scripts/download_flywire.py --select all --lod 1)",
+    "source_mesh_lod": 1
+  },
+  "results": {
+    "n_neurons": 139244,
+    "source_obj_size": "728 GB",
+    "wall_clock": "5 h 04 min",
+    "wall_clock_s_approx": 18240,
+    "peak_rss_gb": 33.2,
+    "cpu_percent": 1460,
+    "exit_status": 0,
+    "n_parts_z4": 604,
+    "pyramid_storage_by_zoom_gb": {
+      "uncompressed": [
+        2.61,
+        5.33,
+        12.07,
+        43.77,
+        410.06
+      ],
+      "compressed_on_disk": [
+        1.51,
+        2.9,
+        6.32,
+        22.39,
+        183.59
+      ],
+      "compressed_total": 216.7,
+      "source": "storage scan of the finished pyramid (Parquet column metadata), run record on the benchmark host"
+    }
+  },
+  "provenance": "Transcribed from the /usr/bin/time -v log of the tiling run on the benchmark host (80-core Linux, 2x NVIDIA RTX A4500) and from the run record written at completion. The raw time log and the pyramid stay on that host and are not deposited here. Wall clock is to the minute; the source size is approximate as recorded."
+}

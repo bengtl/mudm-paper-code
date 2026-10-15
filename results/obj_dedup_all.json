@@ -1,0 +1,11 @@
+{
+ "n_compared": 23546,
+ "unique_verts_equal": 23546,
+ "unique_faces_equal": 23546,
+ "mismatches": [],
+ "n_mismatch": 0,
+ "obj_raw_verts": 808985382,
+ "obj_unique_verts": 756212103,
+ "obj_raw_faces": 1513903754,
+ "obj_unique_faces": 1496069494
+}

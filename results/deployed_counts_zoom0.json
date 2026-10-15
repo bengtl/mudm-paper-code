@@ -1,0 +1,32 @@
+{
+ "flywire": {
+  "zoom0_parts": 604,
+  "rows": 139244,
+  "distinct_features": 139244,
+  "seconds": 28
+ },
+ "malecns": {
+  "zoom0_parts": 804,
+  "rows": 176443,
+  "distinct_features": 176443,
+  "seconds": 38
+ },
+ "banc": {
+  "zoom0_parts": 490,
+  "rows": 134934,
+  "distinct_features": 134934,
+  "seconds": 22
+ },
+ "hemibrain": {
+  "zoom0_parts": 1162,
+  "rows": 25000,
+  "distinct_features": 25000,
+  "seconds": 52
+ },
+ "manc-full": {
+  "zoom0_parts": 41,
+  "rows": 23546,
+  "distinct_features": 23546,
+  "seconds": 5
+ }
+}

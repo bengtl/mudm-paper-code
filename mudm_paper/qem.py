@@ -7,7 +7,7 @@ FPS sampling and precomputed LODs — same underlying QEM engine muDM uses for
 its tiling pipeline, just invoked at query time instead of build time.
 
 `decimate_tin`'s I/O contract (confirmed empirically, see
-paper/harness/tests/test_qem.py and the Task 2 report):
+mudm_paper/tests/test_qem.py):
   - Input/output "coordinates": a list of faces.
   - Each face is a 1-element list containing one ring: `[ring]`.
   - Each ring is 4 **coordinate** points (not indices): `[p0, p1, p2, p0]`,

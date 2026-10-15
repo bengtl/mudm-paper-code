@@ -3,7 +3,7 @@
 Input: a JSON list of neuPrint neuron rows carrying synapse counts
 (``[{"bodyId": ..., "pre": ..., "post": ...}, ...]`` -- e.g. the cached
 fetch behind the counts-only leakage probe,
-paper/reviews/synapse_probe.py). Output: ``{str(bodyId): [log1p(pre),
+mudm_paper/synapse_probe.py). Output: ``{str(bodyId): [log1p(pre),
 log1p(post), log1p(pre+post), pre/(pre+post)]}`` -- the probe's exact
 feature definition, so the fusion arm (``dgcnn_fusion``), the counts-only
 baseline (``counts_mlp``), and the probe all see identical inputs. Rows

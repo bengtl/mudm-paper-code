@@ -11,8 +11,8 @@ Inputs are deposited artifacts only (no GPU): the economy JSONs and
 ``data/manc_rep_neuron_lods.npz`` (feature 6546 / body 155112, cell type
 IN13A065, extracted from the v0.6.4 MANC pyramid; border-duplicated faces removed).
 
-Usage::
-    python figures/fig2_economy.py [--out DIR]
+Usage (from the repository root; needs the ``figures`` extra)::
+    python figures/fig2_economy.py [--out DIR]    # default DIR: figures/
 """
 from __future__ import annotations
 
@@ -44,14 +44,18 @@ TASKS = {
 TITLES = {"manc_economy": "MANC, 23,546 neurons", "flywire_economy": "FlyWire, 16,379 neurons"}
 
 
-def load_economy(prefix: str):
+def load_economy(prefix: str, results_dir: Path = RESULTS, file_prefix: str | None = None,
+                 metric: str = "bal_acc"):
+    """`prefix` selects the task list/title; `file_prefix` the artifact stem (default = prefix);
+    `metric` = "bal_acc" (final epoch) or "bal_acc_at_best_val" (curve runs)."""
     storage = None
     series = []
+    fp = file_prefix or prefix
     for key, label in TASKS[prefix]:
-        d = json.load(open(RESULTS / f"{prefix}_{key}.json"))
+        d = json.load(open(results_dir / f"{fp}_{key}.json"))
         cells = d[key]["precomputed"]
         levels = sorted(cells, key=int)
-        agg = [next(iter(cells[l].values()))["bal_acc"] for l in levels]
+        agg = [next(iter(cells[l].values()))[metric] for l in levels]
         series.append((label, np.array([a["mean"] for a in agg]), np.array([a["se"] for a in agg])))
         if storage is None:
             s = d["cost"]["storage_per_level"]
@@ -88,11 +92,14 @@ def draw_mesh(ax, pos, idx, edges: bool, frame=None):
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--out", type=Path, default=None, help="output dir (default: ../../paper/figures if present)")
+    ap.add_argument("--out", type=Path, default=SCRIPT_DIR, help="output directory (default: figures/)")
+    ap.add_argument("--results", type=Path, default=RESULTS, help="directory holding the economy JSONs")
+    ap.add_argument("--manc-prefix", default="manc_economy", help="artifact stem for panel b")
+    ap.add_argument("--flywire-prefix", default="flywire_economy", help="artifact stem for panel c")
+    ap.add_argument("--metric", default="bal_acc", choices=["bal_acc", "bal_acc_at_best_val"])
+    ap.add_argument("--name", default="fig2_economy", help="output file stem")
     args = ap.parse_args()
-    out = args.out or (SCRIPT_DIR.parents[1] / "paper" / "figures")
-    if not out.exists():
-        out = Path.cwd()
+    out = args.out
     apply_rcparams()
 
     npz = np.load(DATA / "manc_rep_neuron_lods.npz")
@@ -120,9 +127,13 @@ def main() -> None:
     fig.text(0.015, 0.95, "a", fontsize=12, fontweight="bold")
 
     # --- b, c: accuracy vs storage ---------------------------------------
-    for col, (prefix, letter) in enumerate([("manc_economy", "b"), ("flywire_economy", "c")]):
+    panels = [("manc_economy", "b", args.manc_prefix), ("flywire_economy", "c", args.flywire_prefix)]
+    loaded = [load_economy(prefix, args.results, fp, args.metric) for prefix, _, fp in panels]
+    lo = min((m - e).min() for _, series in loaded for _, m, e in series)
+    hi = max((m + e).max() for _, series in loaded for _, m, e in series)
+    pad = 0.04 * (hi - lo) + 0.02
+    for col, ((prefix, letter, _), (storage, series)) in enumerate(zip(panels, loaded)):
         ax = fig.add_subplot(gs[1, 5 * col:5 * col + 5])
-        storage, series = load_economy(prefix)
         for i, (label, mean, se) in enumerate(series):
             ax.errorbar(storage, mean, yerr=se, color=WONG_PALETTE[i], marker="o", ms=4,
                         lw=1.4, capsize=2, capthick=0.8, elinewidth=0.8, label=label, zorder=3)
@@ -133,16 +144,16 @@ def main() -> None:
         ax.set_xlabel("pyramid level / stored geometry (GB, uncompressed)")
         if col == 0:
             ax.set_ylabel("balanced accuracy")
-        ax.set_ylim(0.47, 0.84)
+        ax.set_ylim(lo - pad, hi + pad)
         ax.set_title(f"{TITLES[prefix]} ({storage[-1] / storage[0]:.0f}× storage span)")
         ax.grid(axis="y", color="#dddddd", lw=0.5, zorder=0)
-        ax.legend(loc="center left", frameon=False, handlelength=1.6, borderaxespad=0.3)
+        ax.legend(loc="best", frameon=False, handlelength=1.6, borderaxespad=0.6)
         fig.text(0.015 if col == 0 else 0.495, 0.50, letter, fontsize=12, fontweight="bold")
 
     out.mkdir(parents=True, exist_ok=True)
-    fig.savefig(out / "fig2_economy.pdf", bbox_inches="tight", dpi=400)
-    fig.savefig(out / "fig2_economy.png", dpi=200, bbox_inches="tight")
-    print("wrote", out / "fig2_economy.pdf")
+    fig.savefig(out / f"{args.name}.pdf", bbox_inches="tight", dpi=400)
+    fig.savefig(out / f"{args.name}.png", dpi=200, bbox_inches="tight")
+    print("wrote", out / f"{args.name}.pdf")
 
 
 if __name__ == "__main__":

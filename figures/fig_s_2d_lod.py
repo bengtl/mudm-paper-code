@@ -1,4 +1,4 @@
-"""Extended Data figure: 2D polygon level-of-detail on PanNuke nuclei.
+"""Extended Data Fig. 1: 2D polygon level-of-detail on PanNuke nuclei.
 
 Real, data-driven figure. Reads two artifacts from data/:
   pannuke_2d_lod_fidelity.json  -- storage vs IoU across 38,078 nuclei
@@ -15,28 +15,35 @@ pipeline (identical Rust and Python implementations; see
 mudm_tools/mudm2vt/simplify.py and rust/src/simplify2d.rs), embedded here so
 the figure is reproducible without the pipeline installed.
 
-Usage::
-    uv run --with matplotlib --with shapely python paper/figures/scripts/fig_s_2d_lod.py
+The data files are derived from PanNuke and carry its CC BY-NC-SA 4.0 license
+(see LICENSE-DATA.md).
+
+Usage (from the repository root; needs the ``figures`` extra)::
+    python figures/fig_s_2d_lod.py [--out DIR]    # default DIR: figures/
 """
 from __future__ import annotations
 
+import argparse
 import json
 import math
 import sys
 from pathlib import Path
 
-import matplotlib.pyplot as plt
-import matplotlib.ticker as mticker
-import numpy as np
-from matplotlib.gridspec import GridSpec
-from shapely.geometry import Polygon
+import matplotlib
+
+matplotlib.use("Agg")  # headless rendering
+import matplotlib.pyplot as plt  # noqa: E402
+import matplotlib.ticker as mticker  # noqa: E402
+import numpy as np  # noqa: E402
+from matplotlib.gridspec import GridSpec  # noqa: E402
+from shapely.geometry import Polygon  # noqa: E402
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 sys.path.insert(0, str(SCRIPT_DIR))
 from _palette import WONG_PALETTE, apply_rcparams  # noqa: E402
 
 DATA = SCRIPT_DIR / "data"
-OUT_DIR = SCRIPT_DIR.parents[0]  # paper/figures/
+OUT_DIR = SCRIPT_DIR  # figures/
 BLUE = WONG_PALETTE[0]
 GREY = "#9a9a9a"
 
@@ -110,10 +117,15 @@ def _iou(a, b):
     return inter / (pa.area + pb.area - inter)
 
 
-def main() -> int:
+def main(argv=None) -> int:
+    ap = argparse.ArgumentParser(description="Extended Data Fig. 1: 2D polygon LOD on PanNuke nuclei.")
+    ap.add_argument("--out", type=Path, default=OUT_DIR, help="output directory (default: figures/)")
+    ap.add_argument("--data", type=Path, default=DATA, help="directory holding the pannuke_*.json inputs")
+    args = ap.parse_args(argv)
+    out_dir = args.out
     apply_rcparams()
-    fid = json.loads((DATA / "pannuke_2d_lod_fidelity.json").read_text())
-    rep = json.loads((DATA / "pannuke_rep_nucleus.json").read_text())
+    fid = json.loads((args.data / "pannuke_2d_lod_fidelity.json").read_text())
+    rep = json.loads((args.data / "pannuke_rep_nucleus.json").read_text())
     ring = [(p[0], p[1]) for p in rep["ring"]]
 
     fig = plt.figure(figsize=(7.1, 4.6))
@@ -174,10 +186,10 @@ def main() -> int:
     axb.legend(loc="lower right", fontsize=7.5, frameon=False)
     fig.text(0.015, 0.60, "b", fontsize=12, fontweight="bold")
 
-    OUT_DIR.mkdir(parents=True, exist_ok=True)
-    fig.savefig(OUT_DIR / "fig_s_2d_lod.pdf", bbox_inches="tight")
-    fig.savefig(OUT_DIR / "fig_s_2d_lod.png", dpi=200, bbox_inches="tight")
-    print("wrote", OUT_DIR / "fig_s_2d_lod.pdf")
+    out_dir.mkdir(parents=True, exist_ok=True)
+    fig.savefig(out_dir / "fig_s_2d_lod.pdf", bbox_inches="tight")
+    fig.savefig(out_dir / "fig_s_2d_lod.png", dpi=200, bbox_inches="tight")
+    print("wrote", out_dir / "fig_s_2d_lod.pdf")
     return 0
 
 

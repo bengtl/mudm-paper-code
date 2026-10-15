@@ -5,10 +5,15 @@ build-backend = "hatchling.build"
 [project]
 name = "mudm-paper-code"
 version = "1.0.0"
-description = "Companion code to reproduce the quantitative results (Table 1, Extended Data) of the muDM paper."
+description = "Analysis code and result artifacts for the paper muDM: A Queryable Multi-Resolution Data Model for Vector Geometry in Spatial Bioimaging."
 requires-python = ">=3.11"
 license = { text = "MIT" }
 readme = "README.md"
+authors = [
+    { name = "Bengt Ljungquist" },
+    { name = "Nathan Hotaling" },
+    { name = "Nick Schaub" },
+]
 dependencies = [
     # Pinned to the exact releases used for the paper (public on PyPI).
     "mudm==0.6.4",
@@ -20,8 +25,39 @@ dependencies = [
     "scipy>=1.11",
 ]
 
+[project.urls]
+Repository = "https://github.com/bengtl/mudm-paper-code"
+"Data model (mudm)" = "https://github.com/NovagenResearch/mudm"
+"Pipeline (mudm-tools)" = "https://github.com/NovagenResearch/mudm-tools"
+Specification = "https://novagenresearch.github.io/mudm/"
+"Data catalog" = "https://ngrf.mudm.io"
+
 [project.optional-dependencies]
 figures = ["matplotlib>=3.8", "shapely>=2.0"]
+# Format and read-path benchmark (mudm_paper.bench_formats): HTTP range reads
+# (fsspec + aiohttp, requests for probing; brotli decodes the host's br-encoded
+# JSON), Draco and meshopt decoders, and an OBJ fallback reader. PyPI carries
+# only pre-release sdists of meshoptimizer, so it builds with a C++ compiler;
+# 0.2.30a0 is the release the deposited benchmark used.
+bench = [
+    "fsspec>=2024.0",
+    "aiohttp>=3.9",
+    "requests>=2.31",
+    "brotli>=1.1",
+    "DracoPy>=1.4",
+    "trimesh>=4.0",
+    "meshoptimizer==0.2.30a0",
+]
+# Synapse-count probe (mudm_paper.synapse_probe).
+probe = ["scikit-learn>=1.4"]
+# Nyxus feature-stability analysis (scripts/nyxus_pipeline.py,
+# scripts/extract_pannuke_images.py, scripts/stability_analysis.py).
+stability = [
+    "nyxus==0.11.0",
+    "tifffile>=2024.0",
+    "pandas>=2.0",
+    "pillow>=10.0",
+]
 dev = ["pytest>=8.0"]
 
 [project.scripts]

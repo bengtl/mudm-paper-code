@@ -265,10 +265,29 @@ def _train_eval(
     x_te: torch.Tensor, y_te: torch.Tensor, mask_te: torch.Tensor, epochs: int, lr: float,
     batch_size: int, device: str, n_classes: int,
     extra_tr: torch.Tensor | None = None, extra_te: torch.Tensor | None = None,
+    x_va: torch.Tensor | None = None, y_va: torch.Tensor | None = None,
+    mask_va: torch.Tensor | None = None, extra_va: torch.Tensor | None = None,
+    curve: bool = False,
 ) -> tuple:
     """Train `model` for `epochs` full passes over (x_tr, y_tr) with Adam +
     cross-entropy (shuffled mini-batches of `batch_size`), then evaluate on
-    (x_te, y_te). Returns (accuracy, balanced_accuracy, macro_f1).
+    (x_te, y_te). Returns (accuracy, balanced_accuracy, macro_f1, curve_info).
+
+    `curve_info` is None unless `curve=True`. With `curve=True` -- which
+    requires the validation tensors `x_va`/`y_va`/`mask_va` (and `extra_va`
+    for the fusion models) -- validation AND test balanced accuracy are
+    evaluated after EVERY epoch and returned as::
+
+        {"curve": [{"epoch": e (1-based), "val_bal_acc": ..., "test_bal_acc": ...}, ...],
+         "best_epoch": first 1-based epoch attaining the max val_bal_acc,
+         "test_bal_acc_at_best_val": the test point at that epoch}
+
+    i.e. the learning curve plus the validation-selected (early-stopping)
+    readout a reviewer asked for. The per-epoch pass runs in eval mode under
+    `no_grad` (no dropout draw, no BatchNorm running-stat update), so it
+    leaves the training trajectory -- and hence the final-epoch triple the
+    deposited Table 1 numbers rest on -- bit-identical to `curve=False`.
+    Cost: one extra val+test forward pass per epoch.
 
     Fix B / I2: `mask_tr`/`mask_te` (from `_build_xy`'s batch-max collate)
     are passed into every `model(x, mask)` call, train AND eval, so padding
@@ -280,14 +299,22 @@ def _train_eval(
     single whole-split DGCNN forward OOMs the GPU. Only the (small) train
     tensor is pinned to `device` up front; test batches are moved on demand.
     """
+    if curve:
+        if x_va is None or y_va is None or mask_va is None:
+            raise ValueError("curve=True requires x_va, y_va and mask_va (validation split)")
+        if epochs < 1:
+            raise ValueError("curve=True requires epochs >= 1 (best_epoch is undefined otherwise)")
     model = model.to(device)
     x_tr, y_tr, mask_tr = x_tr.to(device), y_tr.to(device), mask_tr.to(device)
     if extra_tr is not None:
         extra_tr = extra_tr.to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
     n = x_tr.shape[0]
+    y_true = y_te.cpu().numpy()
+    y_true_va = y_va.cpu().numpy() if curve else None
+    curve_rows: list = []
 
-    for _ in range(epochs):
+    for epoch in range(epochs):
         model.train()
         perm = torch.randperm(n)
         for start in range(0, n, batch_size):
@@ -305,14 +332,79 @@ def _train_eval(
             loss.backward()
             optimizer.step()
 
+        if curve:
+            # Learning-curve point: eval-mode, no_grad, RNG-free -- the next
+            # epoch's `model.train()` switches back. See docstring.
+            model.eval()
+            with torch.no_grad():
+                preds_va = _batched_predict(
+                    model, x_va, mask_va, batch_size, device, extra=extra_va
+                )
+                preds_ep = _batched_predict(
+                    model, x_te, mask_te, batch_size, device, extra=extra_te
+                )
+            curve_rows.append({
+                "epoch": epoch + 1,
+                "val_bal_acc": _balanced_accuracy(y_true_va, preds_va, n_classes),
+                "test_bal_acc": _balanced_accuracy(y_true, preds_ep, n_classes),
+            })
+
     model.eval()
     with torch.no_grad():
         preds = _batched_predict(model, x_te, mask_te, batch_size, device, extra=extra_te)
-    y_true = y_te.cpu().numpy()
     acc = float((preds == y_true).mean()) if len(y_true) else 0.0
     bal_acc = _balanced_accuracy(y_true, preds, n_classes)
     f1 = _macro_f1(y_true, preds, n_classes)
-    return acc, bal_acc, f1
+
+    curve_info = None
+    if curve:
+        # np.argmax returns the FIRST index on ties -> earliest best epoch.
+        best_i = int(np.argmax([r["val_bal_acc"] for r in curve_rows]))
+        curve_info = {
+            "curve": curve_rows,
+            "best_epoch": curve_rows[best_i]["epoch"],
+            "test_bal_acc_at_best_val": curve_rows[best_i]["test_bal_acc"],
+        }
+    return acc, bal_acc, f1, curve_info
+
+
+def _cell_result(
+    acc_l: list, bal_acc_l: list, f1_l: list, eff_l: list, curves: list | None = None
+) -> dict:
+    """One `result[label][arm][level][budget]` cell from its per-seed lists.
+
+    `curves` is None on the `curve=False` path, in which case the dict is
+    exactly the pre-curve structure (same keys, same order -- the deposited
+    Table 1 JSONs and their validators depend on it). With `curves` (one
+    `_train_eval` curve_info per seed) three keys are ADDED after the
+    existing ones: `raw["curves"]`, the `bal_acc_at_best_val` aggregate
+    (test balanced accuracy at each seed's best-validation epoch) and
+    `best_epoch` (`{"mean", "raw"}`).
+    """
+    cell = {
+        "acc": aggregate(acc_l),
+        "bal_acc": aggregate(bal_acc_l),
+        "f1": aggregate(f1_l),
+        # Fix B / I2: real (right-censored) point counts actually fed to the
+        # model this cell -- lets a reader see coarse LODs feed fewer points
+        # rather than assuming `budget`. Train + test only (val, when the
+        # curve is on, is not folded in, so the number keeps its meaning).
+        "eff_points": {
+            "mean": float(np.mean(eff_l)),
+            "min": int(np.min(eff_l)),
+        },
+        "raw": {
+            "acc": acc_l,
+            "bal_acc": bal_acc_l,
+            "f1": f1_l,
+        },
+    }
+    if curves is not None:
+        cell["raw"]["curves"] = curves
+        cell["bal_acc_at_best_val"] = aggregate([c["test_bal_acc_at_best_val"] for c in curves])
+        best_epochs = [c["best_epoch"] for c in curves]
+        cell["best_epoch"] = {"mean": float(np.mean(best_epochs)), "raw": best_epochs}
+    return cell
 
 
 def _eligible_body_ids(
@@ -350,7 +442,11 @@ def run_sweep(parquet_dir: str, config: dict) -> dict:
     batch_size (default 32), cap (default 16384 -- max vertices kept per
     neuron per level by `load_neuron_lods`; the default TRUNCATES large
     finest-level meshes spatially, so raise it for a fair full-resolution
-    baseline on connectomes with big neurons).
+    baseline on connectomes with big neurons), curve (default False -- when
+    True the otherwise-unused validation split is built per cell and
+    `_train_eval` records a per-epoch val/test balanced-accuracy learning
+    curve; see `_cell_result` for the extra persisted keys. The False path
+    is byte-identical to the pre-curve structure).
 
     Returns a dict keyed by label (each holding per-arm/level/budget
     `{"acc", "bal_acc", "f1"}` aggregates plus a `"raw"` sibling with the
@@ -377,6 +473,7 @@ def run_sweep(parquet_dir: str, config: dict) -> dict:
     group_field = config.get("group_field")
     lr = config.get("lr", 1e-3)
     batch_size = config.get("batch_size", 32)
+    curve = bool(config.get("curve", False))
 
     # Fusion support: models in _EXTRA_MODELS consume per-neuron scalar
     # features from config["extra_features"] ({body_id: [floats]}). Coverage
@@ -459,12 +556,14 @@ def run_sweep(parquet_dir: str, config: dict) -> dict:
         bal_acc_seeds: dict = {}
         f1_seeds: dict = {}
         eff_seeds: dict = {}
+        curve_seeds: dict = {}  # only filled when `curve`; one curve_info per seed
         for arm in arms:
             _, arm_levels = _arm_method_and_levels(arm, levels)
             acc_seeds[arm] = {lvl: {b: [] for b in budgets} for lvl in arm_levels}
             bal_acc_seeds[arm] = {lvl: {b: [] for b in budgets} for lvl in arm_levels}
             f1_seeds[arm] = {lvl: {b: [] for b in budgets} for lvl in arm_levels}
             eff_seeds[arm] = {lvl: {b: [] for b in budgets} for lvl in arm_levels}
+            curve_seeds[arm] = {lvl: {b: [] for b in budgets} for lvl in arm_levels}
 
         skip_label = False
         meta_classes = None
@@ -510,6 +609,13 @@ def run_sweep(parquet_dir: str, config: dict) -> dict:
             # independent -- build once per seed, aligned with tr/te order.
             extra_tr = _build_extra(tr, extra_map) if needs_extra else None
             extra_te = _build_extra(te, extra_map) if needs_extra else None
+            extra_va = _build_extra(va, extra_map) if (needs_extra and curve) else None
+            if curve and not va:
+                warnings.warn(
+                    f"label {label!r} seed={seed}: empty validation split; the "
+                    f"learning curve's val_bal_acc will be 0.0 every epoch and "
+                    f"best_epoch degenerates to 1"
+                )
 
             for arm in arms:
                 method, arm_levels = _arm_method_and_levels(arm, levels)
@@ -521,15 +627,30 @@ def run_sweep(parquet_dir: str, config: dict) -> dict:
                         x_te, y_te, mask_te, ns_te = _build_xy(
                             te, lods, level, method, budget, seed, labels_map, cls_idx, qem_cache
                         )
+                        # Validation tensors (curve only). Built AFTER tr/te and
+                        # via seed-local sampling RNGs, so tr/te sampling and
+                        # the torch-RNG-driven model init below are untouched.
+                        curve_kwargs: dict = {}
+                        if curve:
+                            x_va, y_va, mask_va, _ns_va = _build_xy(
+                                va, lods, level, method, budget, seed, labels_map, cls_idx,
+                                qem_cache,
+                            )
+                            curve_kwargs = dict(
+                                x_va=x_va, y_va=y_va, mask_va=mask_va, extra_va=extra_va,
+                                curve=True,
+                            )
                         model = _make_model(model_name, len(classes), n_extra)
-                        acc, bal_acc, f1 = _train_eval(
+                        acc, bal_acc, f1, curve_info = _train_eval(
                             model, x_tr, y_tr, mask_tr, x_te, y_te, mask_te,
                             epochs, lr, batch_size, device, len(classes),
-                            extra_tr=extra_tr, extra_te=extra_te,
+                            extra_tr=extra_tr, extra_te=extra_te, **curve_kwargs,
                         )
                         acc_seeds[arm][level][budget].append(acc)
                         bal_acc_seeds[arm][level][budget].append(bal_acc)
                         f1_seeds[arm][level][budget].append(f1)
+                        if curve:
+                            curve_seeds[arm][level][budget].append(curve_info)
                         # Fix B: effective (real, right-censored) point counts fed
                         # this cell, across both train and test neurons this seed.
                         eff_seeds[arm][level][budget].extend(ns_tr)
@@ -541,23 +662,13 @@ def run_sweep(parquet_dir: str, config: dict) -> dict:
         result[label] = {
             arm: {
                 level: {
-                    budget: {
-                        "acc": aggregate(acc_seeds[arm][level][budget]),
-                        "bal_acc": aggregate(bal_acc_seeds[arm][level][budget]),
-                        "f1": aggregate(f1_seeds[arm][level][budget]),
-                        # Fix B / I2: real (right-censored) point counts actually
-                        # fed to the model this cell -- lets a reader see coarse
-                        # LODs feed fewer points rather than assuming `budget`.
-                        "eff_points": {
-                            "mean": float(np.mean(eff_seeds[arm][level][budget])),
-                            "min": int(np.min(eff_seeds[arm][level][budget])),
-                        },
-                        "raw": {
-                            "acc": acc_seeds[arm][level][budget],
-                            "bal_acc": bal_acc_seeds[arm][level][budget],
-                            "f1": f1_seeds[arm][level][budget],
-                        },
-                    }
+                    budget: _cell_result(
+                        acc_seeds[arm][level][budget],
+                        bal_acc_seeds[arm][level][budget],
+                        f1_seeds[arm][level][budget],
+                        eff_seeds[arm][level][budget],
+                        curves=curve_seeds[arm][level][budget] if curve else None,
+                    )
                     for budget in budgets
                 }
                 for level in acc_seeds[arm]

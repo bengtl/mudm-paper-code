@@ -14,10 +14,10 @@ lineage tasks, 100% for the cell-type task by necessity).
 
 The complementary robustness check (rerunning the sweep under a cell-type-held-out
 split) is produced by ``run_manc --group-field cell_type`` and deposited as
-``benchmark_results/manc_leakctrl_*.json``.
+``results/manc_leakctrl_*.json``.
 
 Usage:
-    PYTHONPATH=<paper repo> python -m mudm_paper.leakage_analysis <parquet_dir> [seeds]
+    uv run python -m mudm_paper.leakage_analysis <parquet_dir> [seeds]
 """
 
 import sys
@@ -99,6 +99,9 @@ def serial_homolog_exposure(
 
 def main(argv=None):
     argv = argv if argv is not None else sys.argv[1:]
+    if not argv or argv[0] in ("-h", "--help"):
+        print(__doc__)
+        return
     parquet = argv[0]
     seeds = int(argv[1]) if len(argv) > 1 else 15
 

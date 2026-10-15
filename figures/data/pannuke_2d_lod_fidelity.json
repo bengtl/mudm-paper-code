@@ -1,0 +1,81 @@
+{
+  "dataset": "pannuke_mudm nuclei (find_contours, simplify=False source)",
+  "n_patches": 1512,
+  "n_nuclei": 38078,
+  "file_stride": 5,
+  "min_edges": 4,
+  "full_total_verts": 3491002,
+  "full_mean_verts": 91.68,
+  "levels": [
+    {
+      "eps_px": 0.0,
+      "mean_v": 91.7,
+      "storage_pct": 100.0,
+      "mean_iou": 1.0,
+      "median_iou": 1.0,
+      "p05_iou": 1.0,
+      "mean_area_err_pct": 0.0,
+      "p95_area_err_pct": 0.0
+    },
+    {
+      "eps_px": 0.25,
+      "mean_v": 32.9,
+      "storage_pct": 35.92,
+      "mean_iou": 1.0,
+      "median_iou": 1.0,
+      "p05_iou": 1.0,
+      "mean_area_err_pct": 0.001,
+      "p95_area_err_pct": 0.0
+    },
+    {
+      "eps_px": 0.5,
+      "mean_v": 19.2,
+      "storage_pct": 20.94,
+      "mean_iou": 0.9798,
+      "median_iou": 0.9846,
+      "p05_iou": 0.958,
+      "mean_area_err_pct": 0.9,
+      "p95_area_err_pct": 2.326
+    },
+    {
+      "eps_px": 1.0,
+      "mean_v": 10.3,
+      "storage_pct": 11.25,
+      "mean_iou": 0.9518,
+      "median_iou": 0.9622,
+      "p05_iou": 0.8961,
+      "mean_area_err_pct": 2.35,
+      "p95_area_err_pct": 6.915
+    },
+    {
+      "eps_px": 2.0,
+      "mean_v": 7.7,
+      "storage_pct": 8.43,
+      "mean_iou": 0.8994,
+      "median_iou": 0.9254,
+      "p05_iou": 0.7314,
+      "mean_area_err_pct": 7.946,
+      "p95_area_err_pct": 24.715
+    },
+    {
+      "eps_px": 4.0,
+      "mean_v": 5.7,
+      "storage_pct": 6.25,
+      "mean_iou": 0.773,
+      "median_iou": 0.7846,
+      "p05_iou": 0.5547,
+      "mean_area_err_pct": 21.361,
+      "p95_area_err_pct": 43.75
+    },
+    {
+      "eps_px": 8.0,
+      "mean_v": 4.5,
+      "storage_pct": 4.94,
+      "mean_iou": 0.6063,
+      "median_iou": 0.6555,
+      "p05_iou": 0.381,
+      "mean_area_err_pct": 38.62,
+      "p95_area_err_pct": 61.727
+    }
+  ]
+}

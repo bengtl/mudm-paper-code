@@ -40,6 +40,36 @@ def paired_t(a: list[float], b: list[float]) -> dict:
     return {"diff": diff, "t": float(t_stat), "p": float(p_val)}
 
 
+def holm(pvalues: list[float]) -> list[float]:
+    """Holm step-down adjusted p-values (Holm, Scand. J. Stat. 1979).
+
+    For m p-values sorted ascending, p_(1) <= ... <= p_(m), the adjusted
+    value of the j-th smallest is ``max_{i <= j} min(1, (m - i + 1) * p_(i))``.
+    The running maximum makes the adjusted values monotone in the raw order,
+    and each is capped at 1. Values are returned in the input order, so
+    ``holm(p)[k] < alpha`` iff hypothesis k is rejected by Holm's procedure at
+    family-wise level alpha. Ties keep their input order (stable sort), which
+    does not affect the adjusted values.
+
+    Raises:
+        ValueError: if any p-value is NaN or outside [0, 1].
+    """
+    p = np.asarray(pvalues, dtype=float)
+    if p.ndim != 1:
+        raise ValueError("pvalues must be a flat sequence")
+    m = len(p)
+    if m == 0:
+        return []
+    if np.isnan(p).any() or (p < 0).any() or (p > 1).any():
+        raise ValueError(f"p-values must lie in [0, 1]: {pvalues!r}")
+    order = np.argsort(p, kind="stable")
+    scaled = (m - np.arange(m)) * p[order]  # (m - i + 1) * p_(i), i = 1..m
+    adj_sorted = np.minimum(1.0, np.maximum.accumulate(scaled))
+    adj = np.empty(m)
+    adj[order] = adj_sorted
+    return [float(x) for x in adj]
+
+
 def tost_equivalence(a: list[float], b: list[float], margin: float, alpha: float = 0.05) -> dict:
     """Two one-sided tests (TOST) for equivalence.
 

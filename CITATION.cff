@@ -1,0 +1,55 @@
+cff-version: 1.2.0
+message: "If you use this code or the deposited result artifacts, please cite the muDM paper (preferred citation below) and the mudm and mudm-tools releases."
+type: software
+title: "mudm-paper-code: analysis code and result artifacts for the muDM paper"
+version: 1.0.0
+license: MIT
+repository-code: "https://github.com/bengtl/mudm-paper-code"
+url: "https://ngrf.mudm.io"
+abstract: "Analysis code, deposited result artifacts and table and figure scripts that reproduce the quantitative results of the paper muDM: A Queryable Multi-Resolution Data Model for Vector Geometry in Spatial Bioimaging."
+keywords:
+  - spatial bioimaging
+  - vector data model
+  - level of detail
+  - multi-resolution pyramid
+  - connectomics
+  - spatial transcriptomics
+  - machine learning
+authors:
+  - family-names: Ljungquist
+    given-names: Bengt
+    affiliation: "NovaGen Research Fund (NGRF)"
+  - family-names: Hotaling
+    given-names: Nathan
+    affiliation: "NovaGen Research Fund (NGRF); National Center for Advancing Translational Sciences (NCATS), National Institutes of Health (NIH)"
+  - family-names: Schaub
+    given-names: Nick
+    affiliation: "NovaGen Research Fund (NGRF); National Center for Advancing Translational Sciences (NCATS), National Institutes of Health (NIH)"
+preferred-citation:
+  type: article
+  title: "muDM: A Queryable Multi-Resolution Data Model for Vector Geometry in Spatial Bioimaging"
+  authors:
+    - family-names: Ljungquist
+      given-names: Bengt
+    - family-names: Hotaling
+      given-names: Nathan
+    - family-names: Schaub
+      given-names: Nick
+  year: 2026
+  status: preprint
+  notes: "Preprint DOI to follow."
+references:
+  - type: software
+    title: "mudm"
+    version: 0.6.4
+    url: "https://github.com/NovagenResearch/mudm"
+    authors:
+      - family-names: Ljungquist
+        given-names: Bengt
+  - type: software
+    title: "mudm-tools"
+    version: 0.6.4
+    url: "https://github.com/NovagenResearch/mudm-tools"
+    authors:
+      - family-names: Ljungquist
+        given-names: Bengt

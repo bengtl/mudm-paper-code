@@ -13,7 +13,7 @@ storage per LOD is the muDM-attributable economy metric.
     any future model built from these layer types.
   - peak_memory: peak activation/param bytes for one forward+loss+backward
     step, via torch.cuda.max_memory_allocated. CUDA only; 0 on CPU (real
-    measurement runs on oden's A4500 GPUs).
+    measurement runs on the benchmark host's A4500 GPUs).
   - lod_storage: per-zoom on-disk storage read from parquet metadata only
     (no decompression/decoding), adapted from the reference script's
     `lod_storage_per_zoom` / `_positions_stats` metadata-only approach.
@@ -82,7 +82,7 @@ def peak_memory(model: nn.Module, n_points: int, device: str, bs: int = 64) -> i
     Meaningful on CUDA only (`torch.cuda.max_memory_allocated` has no CPU
     equivalent in core torch); returns 0 on CPU by design rather than
     attempting a CPU memory measurement -- the real numbers behind the
-    paper's cost axis are measured on oden's A4500 GPUs, so this path only
+    paper's cost axis are measured on the benchmark host's A4500 GPUs, so this path only
     needs to be safe to call from CPU-only test/CI environments.
     """
     dev = torch.device(device)
@@ -116,7 +116,7 @@ def lod_storage(parquet_dir: str) -> dict:
     each column-chunk in row-group metadata already carries its column name
     as a plain string (no dotted/nested path, since `positions` is a
     top-level large_binary field in the muDM tiling schema -- see
-    `paper/harness/tests/fixtures.py::_ROW_SCHEMA`), so a direct string
+    `mudm_paper/tests/fixtures.py::_ROW_SCHEMA`), so a direct string
     comparison identifies it without a separate schema/column-index lookup.
 
     ``ratio_to_finest`` = (finest zoom's uncompressed bytes) / (this zoom's

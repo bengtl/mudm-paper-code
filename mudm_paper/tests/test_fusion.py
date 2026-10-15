@@ -1,7 +1,7 @@
 """Tests for the multimodal fusion arm: geometry + per-neuron scalar features.
 
-Nick's 2026-08-11 proposal, gated by the synapse-count leakage probe
-(paper/reviews/synapse-probe-2026-08-11.md): a DGCNN that concatenates
+The fusion arm, gated by the synapse-count leakage probe
+(mudm_paper/synapse_probe.py): a DGCNN that concatenates
 per-neuron scalar features (log-synapse counts) to the pooled global feature
 ("dgcnn_fusion"), and a geometry-free MLP over the same scalars
 ("counts_mlp") as the counts-only baseline. Guardrail: fusion must beat BOTH
