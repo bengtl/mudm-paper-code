@@ -2,7 +2,7 @@ cff-version: 1.2.0
 message: "If you use this code or the deposited result artifacts, please cite the muDM paper (preferred citation below) and the mudm and mudm-tools releases."
 type: software
 title: "mudm-paper-code: analysis code and result artifacts for the muDM paper"
-version: 1.0.0
+version: 1.0.1
 license: MIT
 repository-code: "https://github.com/bengtl/mudm-paper-code"
 url: "https://ngrf.mudm.io"

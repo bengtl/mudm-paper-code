@@ -214,9 +214,12 @@ and vertex fidelity on a 200-neuron sample. Produced by
 (needs the `bench` extra). Run 2026-08-21.
 
 **`manc_access_benchmark.json`.** Read-path benchmark on the encodes in `<formats_dir>`
-(Results; Methods, read-path benchmark; Extended Data structural analysis): whole-level
-read 0.91 ms per neuron for Parquet against 28.8 (3D Tiles), 70.0 (Neuroglancer) and
-178.7 ms (OBJ) on a 2,000-neuron sample; 3 × 3-tile window pushdown 9.0 times faster than
+(Results; Methods, read-path benchmark; Supplementary Note 4): whole-level
+read 0.91 ms per neuron for Parquet (feature-id and vertex-position columns) against
+28.8 (3D Tiles), 70.0 (Neuroglancer) and 178.7 ms (OBJ) full-mesh decodes on a 2,000-neuron
+sample. The 3D Tiles time includes a one-time neuron-to-tile index scan; counting that scan
+once instead of scaling it (18.3 s, `manc_format_benchmark.json`
+`random_access.tiles3d.index_build_s`) gives the 20.4 ms and the 22-fold lower bound the paper reports; 3 × 3-tile window pushdown 9.0 times faster than
 a level scan; per-object fetch 330 ms (tile-sorted Parquet), 83 ms (feature-sorted) and
 10 ms (Neuroglancer) over 50 identifiers; and the feature-to-record join, 11,745 window
 neurons with their synapse-count records in 2.13 s against 954 s extrapolated from 200
@@ -293,23 +296,26 @@ with the default settings recorded under `params`. Runs 2026-08-24.
 0.6.1), the conversion that produced the catalog dataset `xenium-breast-full`: 169,088
 cells, 169,083 nuclei, 42,638,083 transcripts, 541 codewords (280 predesigned and 33 custom
 expression targets, 228 controls and blanks). Backs Methods (cross-format round trip) and
-the breast row of Extended Data Table 5. Transcribed from the conversion log of
+the breast row of Extended Data Table 5. The paper reports distinct cells: the served
+pyramid holds 169,088 cell polygons for 167,780 distinct cell identifiers, because the converter splits 1,308
+cell rings into two polygons (checked on the served pyramid on 2026-10-16). Transcribed from the conversion log of
 `python -m mudm_tools.converters.cli convert -f xenium -i <Xenium_FFPE_Human_Breast_Cancer_Rep1_outs> -o <out_dir>`.
-The file's `supersedes` block keeps an earlier v0.5.0 cell count (167,780) from a smoke
-test. Dated 2026-06-02.
+The file's `supersedes` block, which treats 169,088 as the cell count, predates that check. Dated 2026-06-02.
 
 ## Catalog and decoder probes
 
 **`deployed_counts_zoom0.json`.** Number of zoom-0 parts, rows and distinct `feature_id`
 values in the served Parquet pyramids of five connectomes, read over HTTP from
 <https://ngrf.mudm.io>: MANC 23,546, FlyWire 139,244, male CNS 176,443, BANC 134,934,
-hemibrain 25,000 (Results; Extended Data Table 5, "Scale (served)"). Counted 2026-08-25
+hemibrain 25,000. Zoom 0 drops the smallest neurons of the male CNS and BANC; the finest
+level and the served descriptors (`mudm:feature_count`) hold 176,570 and 134,942, the counts
+the paper reports (Results; Extended Data Table 5, "Scale (served)"). Counted 2026-08-25
 with a helper that is not yet in this repository.
 
 **`B6_gltf_decoder_comparison.json`.** glTF traversal micro-probe: the compiled Rust
 `gltf` reader in mudm-tools against `pygltflib` on 50 GLB tiles, 20 iterations each, on a
 12-core host. The tiles come from a separate tileset that predates the v0.6.4 MANC
-encodes (Extended Data, structural analysis). Produced by the mudm-tools script
+encodes. Not reported in the paper. Produced by the mudm-tools script
 `scripts/benchmark_gltf_decoder.py --tiles-dir <glb_tiles_dir> --sample 50 --iters 20 --output results/B6_gltf_decoder_comparison.json`.
 Run 2026-05-21.
 

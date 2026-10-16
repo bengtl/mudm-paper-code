@@ -28,6 +28,7 @@ import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
 from matplotlib.collections import PolyCollection  # noqa: E402
 from matplotlib.gridspec import GridSpec, GridSpecFromSubplotSpec  # noqa: E402
+from matplotlib.transforms import Bbox  # noqa: E402
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 sys.path.insert(0, str(SCRIPT_DIR))
@@ -101,30 +102,45 @@ def main() -> None:
     args = ap.parse_args()
     out = args.out
     apply_rcparams()
+    plt.rcParams["pdf.fonttype"] = 42  # embed text as TrueType, not Type 3
+    plt.rcParams["ps.fonttype"] = 42
 
     npz = np.load(DATA / "manc_rep_neuron_lods.npz")
     meta = json.loads(str(npz["meta"]))
 
-    fig = plt.figure(figsize=(7.1, 5.4))
-    gs = GridSpec(2, 10, figure=fig, height_ratios=[0.9, 1.35], hspace=0.28, wspace=0.55)
-    gs_a = GridSpecFromSubplotSpec(1, 5, subplot_spec=gs[0, :], wspace=0.04)
-
-    # --- a: one neuron across levels -------------------------------------
+    # Shared principal frame; x-limits +-lim, y-limits fitted to the neuron with the same pad.
     xy4, _, vt4 = project(npz["pos4"])
     frame = (vt4, npz["pos4"].mean(0))
     lim = np.abs(xy4).max() * 1.05
+    ypad = lim - np.abs(xy4).max()
+    ys = np.concatenate([((npz[f"pos{z}"] - frame[1]) @ vt4.T)[:, 1] for z in range(5)])
+    ylim = (ys.min() - ypad, ys.max() + ypad)
+
+    # Layout in inches: row a is as tall as the equal-aspect renderings; b and c share a sub-grid.
+    fig_w, left, right, a_wspace = 7.1, 0.125, 0.9, 0.04
+    a_h = fig_w * (right - left) / (5 + 4 * a_wspace) * (ylim[1] - ylim[0]) / (2 * lim)
+    bc_h, sep, top_m, bot_m = 2.19, 0.40, 0.40, 0.62
+    fig_h = top_m + a_h + sep + bc_h + bot_m
+    fig = plt.figure(figsize=(fig_w, fig_h))
+    gs = GridSpec(2, 1, figure=fig, height_ratios=[a_h, bc_h], hspace=2 * sep / (a_h + bc_h),
+                  left=left, right=right, top=1 - top_m / fig_h, bottom=bot_m / fig_h)
+    gs_a = GridSpecFromSubplotSpec(1, 5, subplot_spec=gs[0], wspace=a_wspace)
+    gs_bc = GridSpecFromSubplotSpec(1, 2, subplot_spec=gs[1], wspace=0.22)
+
+    # --- a: one neuron across levels -------------------------------------
+    axes_a = []
     for z in range(5):
         ax = fig.add_subplot(gs_a[0, z])
         if z < 4:  # finest level ghosted underneath for context
-            ghost = PolyCollection(xy4[npz["idx4"]], facecolors="#e4e2dc", edgecolors="none", rasterized=True)
+            ghost = PolyCollection(xy4[npz["idx4"]], facecolors="#cfcac0", edgecolors="none", rasterized=True)
             ax.add_collection(ghost)
         draw_mesh(ax, npz[f"pos{z}"], npz[f"idx{z}"], edges=(z <= 2), frame=frame)
         ax.set_xlim(-lim, lim)
-        ax.set_ylim(-lim, lim)
+        ax.set_ylim(*ylim)
         m = meta[f"z{z}"]
         ax.set_title(f"z{z}{' (coarsest)' if z == 0 else ' (finest)' if z == 4 else ''}\n"
                      f"{m['n_unique_verts']:,} v / {m['n_unique_tris']:,} f", fontsize=7, pad=2)
-    fig.text(0.015, 0.95, "a", fontsize=12, fontweight="bold")
+        axes_a.append(ax)
 
     # --- b, c: accuracy vs storage ---------------------------------------
     panels = [("manc_economy", "b", args.manc_prefix), ("flywire_economy", "c", args.flywire_prefix)]
@@ -132,8 +148,9 @@ def main() -> None:
     lo = min((m - e).min() for _, series in loaded for _, m, e in series)
     hi = max((m + e).max() for _, series in loaded for _, m, e in series)
     pad = 0.04 * (hi - lo) + 0.02
-    for col, ((prefix, letter, _), (storage, series)) in enumerate(zip(panels, loaded)):
-        ax = fig.add_subplot(gs[1, 5 * col:5 * col + 5])
+    axes_bc = []
+    for col, ((prefix, _, _), (storage, series)) in enumerate(zip(panels, loaded)):
+        ax = fig.add_subplot(gs_bc[0, col])
         for i, (label, mean, se) in enumerate(series):
             ax.errorbar(storage, mean, yerr=se, color=WONG_PALETTE[i], marker="o", ms=4,
                         lw=1.4, capsize=2, capthick=0.8, elinewidth=0.8, label=label, zorder=3)
@@ -148,7 +165,17 @@ def main() -> None:
         ax.set_title(f"{TITLES[prefix]} ({storage[-1] / storage[0]:.0f}× storage span)")
         ax.grid(axis="y", color="#dddddd", lw=0.5, zorder=0)
         ax.legend(loc="best", frameon=False, handlelength=1.6, borderaxespad=0.6)
-        fig.text(0.015 if col == 0 else 0.495, 0.50, letter, fontsize=12, fontweight="bold")
+        axes_bc.append(ax)
+
+    # Panel letters at the top-left of each panel's drawn extent (titles, tick labels, y-label).
+    fig.canvas.draw()
+    renderer = fig.canvas.get_renderer()
+    to_fig = fig.transFigure.inverted()
+    bb_a = Bbox.union([ax.get_tightbbox(renderer) for ax in axes_a]).transformed(to_fig)
+    bb_b, bb_c = (ax.get_tightbbox(renderer).transformed(to_fig) for ax in axes_bc)
+    for letter, x, y in (("a", bb_b.x0, bb_a.y1), (panels[0][1], bb_b.x0, bb_b.y1),
+                         (panels[1][1], bb_c.x0, bb_c.y1)):
+        fig.text(x, y, letter, fontsize=12, fontweight="bold", ha="left", va="top")
 
     out.mkdir(parents=True, exist_ok=True)
     fig.savefig(out / f"{args.name}.pdf", bbox_inches="tight", dpi=400)

@@ -124,6 +124,7 @@ def main(argv=None) -> int:
     args = ap.parse_args(argv)
     out_dir = args.out
     apply_rcparams()
+    plt.rcParams["pdf.fonttype"] = 42  # TrueType, so PDF text (incl. τ, ≥) stays searchable
     fid = json.loads((args.data / "pannuke_2d_lod_fidelity.json").read_text())
     rep = json.loads((args.data / "pannuke_rep_nucleus.json").read_text())
     ring = [(p[0], p[1]) for p in rep["ring"]]
@@ -168,18 +169,23 @@ def main(argv=None) -> int:
     axb.fill_between(stor, p05, miou, color=BLUE, alpha=0.15, lw=0,
                      label="5th percentile band")
     axb.plot(stor, miou, "-o", color=BLUE, lw=1.6, ms=5, label="mean IoU")
+    # Labels sit upper right of each point, except on the steep low-tolerance
+    # end, where they go upper left to clear the rising line and the band.
+    label_pos = {4.0: ((-5, 4), "right"), 8.0: ((2, 8), "right")}
     for s, m, t in zip(stor, miou, tol):
+        xy_off, ha = label_pos.get(t, ((4, 7), "left"))
         axb.annotate(f"{t:g} px", (s, m), textcoords="offset points",
-                     xytext=(4, 7), fontsize=7, color=BLUE)
+                     xytext=xy_off, ha=ha, fontsize=7, color=BLUE)
     i1 = tol.index(1.0)
-    axb.annotate("~9x fewer vertices\nat IoU $\\geq$ 0.95",
+    axb.annotate("≈9× fewer vertices\nat IoU ≥ 0.95",
                  (stor[i1], miou[i1]), xytext=(stor[i1] * 2.2, 0.66),
                  fontsize=7.5, ha="left",
                  arrowprops=dict(arrowstyle="->", color="0.35", lw=0.8))
     axb.set_xscale("log")
     axb.set_xlabel("stored geometry (% of full-detail vertices)")
     axb.set_ylabel("geometric fidelity (mean IoU)")
-    axb.set_ylim(0.55, 1.02)
+    axb.set_ylim(0.35, 1.02)  # the 5th-percentile band reaches 0.38 at 8 px
+    axb.set_yticks(np.arange(0.4, 1.01, 0.1))
     axb.set_xticks([5, 10, 20, 40, 100])
     axb.get_xaxis().set_major_formatter(mticker.FuncFormatter(lambda v, _: f"{v:g}"))
     axb.grid(True, which="both", alpha=0.25, lw=0.5)
